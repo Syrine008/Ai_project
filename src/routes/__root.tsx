@@ -9,6 +9,8 @@ import {
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 function NotFoundComponent() {
   return (
@@ -72,11 +74,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "brAIn — AI-powered neurology decision support" },
+      {
+        name: "description",
+        content:
+          "brAIn surfaces interpretable AI patterns across 7 neurological axes — MRI, fMRI, video and EEG — as decision support for clinicians and researchers.",
+      },
+      { name: "author", content: "brAIn" },
+      { property: "og:title", content: "brAIn — AI-powered neurology decision support" },
+      {
+        property: "og:description",
+        content: "Making hidden brain dynamics visible through AI.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
@@ -113,7 +122,10 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
+      <TooltipProvider>
+        <Outlet />
+        <Toaster richColors closeButton position="top-right" />
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
