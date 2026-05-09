@@ -1,32 +1,8 @@
 # axis3_cerebellar_dysfunction
 
-Django app placeholder for this brAIn axis.
+Django app for **Cerebellar Dysfunction** (MRI).
 
-## Endpoint
-`POST /api/axis3-cerebellar-dysfunction/analyze/`
-
-## Suggested layout
-- `views.py`        – DRF `AnalyzeView(APIView)` accepting upload + metadata
-- `serializers.py`  – request/response serializers (mirror `AnalysisResult` in `src/lib/mockApi.ts`)
-- `models.py`       – Case, Result persistence
-- `ml/`             – model loading + inference
-- `explain/`        – axis-specific explainability (heatmaps, regions, signal markers)
-- `urls.py`         – route wiring
-
-## Response contract (matches frontend)
-```json
-{
-  "axisId": "axis3-cerebellar-dysfunction",
-  "caseId": "BRN-XXXXXX",
-  "predictedClass": "string",
-  "topConfidence": 0.0,
-  "summary": "string",
-  "disclaimer": "string",
-  "confidence": [{ "label": "string", "value": 0.0 }],
-  "regions": [{ "region": "string", "side": "L|R|B", "contribution": 0.0 }],
-  "signal":  [{ "t": 0, "v": 0.0 }],
-  "timeline": [{ "t": 0, "label": "string", "severity": "low|moderate|high" }],
-  "network": { "nodes": [], "edges": [] },
-  "metrics": [{ "label": "string", "value": "string" }]
-}
-```
+- Endpoint: `POST /api/axis3-cerebellar-dysfunction/analyze/`
+- Model placeholder: `axis3_cerebellar_dysfunction/ml/axis3_cerebellar_dysfunction_model.pkl` (drop your trained model here — `ModelLoader` will pick it up).
+- Real-model wiring: see `ml/inference.py::predict()`.
+- Explainability: see `explain/explainer.py::build_explanation()`.
