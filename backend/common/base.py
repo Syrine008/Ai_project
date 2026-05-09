@@ -141,7 +141,7 @@ class BaseAnalyzeView(APIView):
 
         # Persist (best-effort — never break the response if DB write fails)
         try:
-            from .models import Case, Result  # late import to avoid circulars
+            from common.models import Case, Result  # late import to avoid circulars
             case = Case.objects.create(
                 case_id=case_id,
                 axis_id=cfg.axis_id,
