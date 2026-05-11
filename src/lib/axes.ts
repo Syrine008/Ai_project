@@ -106,7 +106,7 @@ export const AXES: AxisDef[] = [
     description:
       "fMRI-based network analysis surfaces compensatory or high-effort connectivity patterns invisible to standard reads.",
     input: "fMRI",
-    acceptedFormats: ".nii, .nii.gz, .mat",
+    acceptedFormats: ".nii, .nii.gz",
     endpoint: "/api/axis5-functional-connectivity/analyze/",
     icon: Network,
     accent: "from-[oklch(0.55_0.12_250)] to-[oklch(0.78_0.07_295)]",

@@ -7,5 +7,5 @@ class AnalyzeView(BaseAnalyzeView):
         axis_id="axis5-functional-connectivity",
         predict=predict,
         loader=MODEL_LOADER,
-        accepted_extensions=('.nii', '.nii.gz', '.mat'),
+        accepted_extensions=(".nii", ".nii.gz"),
     )

@@ -3,3 +3,9 @@ djangorestframework>=3.14
 django-cors-headers>=4.3
 numpy>=1.24
 joblib>=1.3
+torch
+nibabel
+nilearn
+scipy
+matplotlib
+pillow

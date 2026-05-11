@@ -9,6 +9,8 @@ import { AXES, type AxisId } from "./axes";
 export interface AnalysisRequest {
   axisId: AxisId;
   fileName: string;
+  file?: File;
+  demo?: boolean;
   patient: {
     id?: string;
     age?: number;
@@ -60,9 +62,19 @@ export interface AnalysisResult {
   timeline?: TimelineMarker[];
   network?: { nodes: string[]; edges: NetworkEdge[] };
   metrics?: { label: string; value: string; hint?: string }[];
+  modelLoaded?: boolean;
+  anomalyScore?: number;
+  threshold?: number;
+  isAnomaly?: boolean;
+  percentileOfNormal?: number;
+  heatmapB64?: string;
+  nFrames?: number;
+  hw?: number;
 }
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "http://localhost:8000";
 
 const rand = (min: number, max: number) => +(Math.random() * (max - min) + min).toFixed(3);
 
@@ -271,9 +283,60 @@ function buildResultFor(req: AnalysisRequest): AnalysisResult {
 }
 
 export async function runAnalysis(req: AnalysisRequest): Promise<AnalysisResult> {
+  if (req.axisId === "axis5-functional-connectivity") {
+    return runAxis5Analysis(req);
+  }
+
   // Simulate network + inference time
   await wait(1800 + Math.random() * 1200);
   return buildResultFor(req);
+}
+
+async function runAxis5Analysis(req: AnalysisRequest): Promise<AnalysisResult> {
+  if (req.demo || !req.file) {
+    await wait(1600 + Math.random() * 800);
+    return buildResultFor(req);
+  }
+
+  const axis = AXES.find((a) => a.id === req.axisId);
+  if (!axis) {
+    throw new Error("Axis not found");
+  }
+
+  const formData = new FormData();
+  formData.append("file", req.file);
+  formData.append(
+    "metadata",
+    JSON.stringify({
+      id: req.patient.id,
+      age: req.patient.age,
+      sex: req.patient.sex,
+      notes: req.patient.notes,
+      demo: !!req.demo,
+    }),
+  );
+
+  const response = await fetch(`${BACKEND_URL}${axis.endpoint}`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.ok) {
+    let detail = "Prediction failed";
+    try {
+      const err = (await response.json()) as { detail?: string };
+      detail = err.detail ?? detail;
+    } catch {
+      // ignore JSON parse errors
+    }
+    throw new Error(detail);
+  }
+
+  const data = (await response.json()) as AnalysisResult;
+  return {
+    ...data,
+    generatedAt: data.generatedAt ?? new Date().toISOString(),
+  };
 }
 
 export interface CaseRecord {

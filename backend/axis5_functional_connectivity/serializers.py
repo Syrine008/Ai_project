@@ -36,6 +36,7 @@ class MetricItem(serializers.Serializer):
 class AnalysisResultSerializer(serializers.Serializer):
     axisId = serializers.CharField()
     caseId = serializers.CharField()
+    generatedAt = serializers.CharField(required=False)
     predictedClass = serializers.CharField()
     topConfidence = serializers.FloatField()
     summary = serializers.CharField()
@@ -46,6 +47,14 @@ class AnalysisResultSerializer(serializers.Serializer):
     timeline = TimelineEvent(many=True, required=False)
     network = serializers.DictField(required=False)
     metrics = MetricItem(many=True, required=False)
+    modelLoaded = serializers.BooleanField(required=False)
+    anomalyScore = serializers.FloatField(required=False)
+    threshold = serializers.FloatField(required=False)
+    isAnomaly = serializers.BooleanField(required=False)
+    percentileOfNormal = serializers.FloatField(required=False)
+    heatmapB64 = serializers.CharField(required=False)
+    nFrames = serializers.IntegerField(required=False)
+    hw = serializers.IntegerField(required=False)
 
 
 class AnalyzeRequestSerializer(serializers.Serializer):
