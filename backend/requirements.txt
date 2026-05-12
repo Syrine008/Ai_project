@@ -9,3 +9,4 @@ torchvision>=0.16,<1.0
 nibabel>=5.2
 Pillow>=10.0
 opencv-python-headless>=4.8
+tensorflow>=2.15

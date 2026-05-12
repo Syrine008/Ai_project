@@ -1,79 +1,143 @@
-"""Inference for axis6-neuromotor-video.
+"""Inference for axis6-neuromotor-video."""
 
-Plug your trained model in by saving it to:
-
-    axis6_neuromotor_video_model.pkl
-
-Once the file exists, `MODEL_LOADER` will joblib-load it on first call and
-`predict()` will hand it to your real inference code (see TODO below).
-Until then, `predict()` returns a realistic mock so the API stays usable.
-"""
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Optional
 
-from common.base import ModelLoader, make_signal, make_timeline
+import joblib
+import numpy as np
+
+from common.base import make_signal, make_timeline
 from ..explain.explainer import build_explanation
 
-# === PLACEHOLDER PATH — drop the real .pkl here ===
-MODEL_PATH = Path(__file__).resolve().parent / "axis6_neuromotor_video_model.pkl"
-MODEL_LOADER = ModelLoader(MODEL_PATH)
+MODEL_PATH = Path(__file__).resolve().parent / "lstm_autoencoder_ataxia.keras"
+SCALER_PATH = Path(__file__).resolve().parent / "scaler_ataxia.pkl"
 
-CLASSES = ['No anomaly', 'Mild gait anomaly', 'Tremor detected', 'Postural instability']
+CLASSES = ["No anomaly", "Mild gait anomaly", "Ataxia gait anomaly"]
+
+
+class Axis6ModelLoader:
+    def __init__(self) -> None:
+        self._model = None
+        self._scaler = None
+
+    def is_available(self) -> bool:
+        return MODEL_PATH.exists() and SCALER_PATH.exists()
+
+    def get(self) -> dict | None:
+        if not self.is_available():
+            return None
+
+        if self._model is None:
+            from tensorflow.keras.models import load_model
+
+            self._model = load_model(MODEL_PATH, compile=False)
+
+        if self._scaler is None:
+            self._scaler = joblib.load(SCALER_PATH)
+
+        return {"model": self._model, "scaler": self._scaler}
+
+
+MODEL_LOADER = Axis6ModelLoader()
 
 
 def preprocess(upload, metadata: dict) -> Any:
-    """Convert the upload into model input.
-
-    TODO: implement real preprocessing for Video input.
-    For MRI: load NIfTI/DICOM, skull-strip, normalize, resample.
-    For fMRI: parcellate, build connectivity matrix.
-    For Video: extract frames, run pose estimation.
-    For EEG: load EDF, bandpass filter, segment.
     """
-    return upload  # placeholder
+    Placeholder preprocessing.
+    Ton modèle LSTM Autoencoder a besoin normalement d'une séquence numérique
+    de forme proche de: (1, timesteps, features).
+
+    Pour l'instant, on garde un fallback demo pour ne pas casser l'API.
+    """
+    return None
 
 
 def predict(upload, model: Optional[Any], metadata: dict) -> dict:
-    """Run inference and return the AnalysisResult dict.
-
-    If a real model is loaded, we delegate to it. Otherwise we fall back to
-    a deterministic mock so the demo stays alive.
+    """
+    Return the AnalysisResult dict expected by the frontend.
     """
     if model is not None:
-        # === PLUG YOUR MODEL HERE ===
-        # x = preprocess(upload, metadata)
-        # probs = model.predict_proba([x])[0]
-        # pred_idx = int(probs.argmax())
-        # confidence = [
-        #     {"label": cls, "value": float(p)}
-        #     for cls, p in zip(CLASSES, probs)
-        # ]
-        # return {
-        #     "predictedClass": CLASSES[pred_idx],
-        #     "topConfidence": float(probs[pred_idx]),
-        #     "confidence": confidence,
-        #     "summary": "Model-generated summary…",
-        #     **build_explanation(upload, metadata, model=model),
-        # }
-        pass
+        try:
+            keras_model = model.get("model")
+            scaler = model.get("scaler")
 
-    # ---- mock fallback (used until the .pkl is plugged in) ----
+            x = preprocess(upload, metadata)
+
+            if x is not None:
+                x = np.asarray(x, dtype=np.float32)
+
+                if x.ndim == 2:
+                    x = np.expand_dims(x, axis=0)
+
+                original_shape = x.shape
+                x_2d = x.reshape(-1, x.shape[-1])
+                x_scaled = scaler.transform(x_2d).reshape(original_shape)
+
+                reconstructed = keras_model.predict(x_scaled, verbose=0)
+                error = float(np.mean(np.square(x_scaled - reconstructed)))
+
+                threshold = float(metadata.get("threshold", 0.15)) if metadata else 0.15
+
+                if error <= threshold:
+                    predicted_class = "No anomaly"
+                    top_confidence = 0.90
+                else:
+                    predicted_class = "Ataxia gait anomaly"
+                    top_confidence = min(0.99, 0.60 + error)
+
+                confidence = [
+                    {
+                        "label": "No anomaly",
+                        "value": float(1 - top_confidence if predicted_class != "No anomaly" else top_confidence),
+                    },
+                    {
+                        "label": "Ataxia gait anomaly",
+                        "value": float(top_confidence if predicted_class != "No anomaly" else 1 - top_confidence),
+                    },
+                ]
+
+                return {
+                    "predictedClass": predicted_class,
+                    "topConfidence": float(top_confidence),
+                    "confidence": confidence,
+                    "summary": f"LSTM autoencoder reconstruction error: {error:.4f}.",
+                    "metrics": {
+                        "reconstructionError": error,
+                        "threshold": threshold,
+                    },
+                    **build_explanation(upload, metadata, model=keras_model),
+                }
+
+        except Exception as exc:
+            return {
+                "predictedClass": "Model integration error",
+                "topConfidence": 0.0,
+                "confidence": [],
+                "summary": f"Model files found, but inference failed: {exc}",
+                **build_explanation(upload, metadata, model=None),
+            }
+
     return _mock_predict(upload, metadata)
 
 
 def _mock_predict(upload, metadata: dict) -> dict:
-    probs = [0.62, 0.1267, 0.1267, 0.1267]
+    probs = [0.62, 0.38]
+
     confidence = [
-        {"label": cls, "value": float(p)}
-        for cls, p in zip(CLASSES, probs)
+        {"label": "No anomaly", "value": float(probs[0])},
+        {"label": "Ataxia gait anomaly", "value": float(probs[1])},
     ]
-    top_idx = max(range(len(probs)), key=lambda i: probs[i])
+
+    top_idx = int(np.argmax(probs))
+
     return {
-        "predictedClass": CLASSES[top_idx],
-        "topConfidence": float(probs[top_idx]),
+        "predictedClass": confidence[top_idx]["label"],
+        "topConfidence": float(confidence[top_idx]["value"]),
         "confidence": confidence,
-        "summary": 'Resting tremor (~5 Hz) and mild gait asymmetry detected.',
+        "summary": "Demo mode: mild gait asymmetry detected. Real preprocessing still needs to be connected.",
+        "signal": make_signal(),
+        "timeline": make_timeline(),
         **build_explanation(upload, metadata, model=None),
     }
