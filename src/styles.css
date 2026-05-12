@@ -197,6 +197,22 @@
   .shadow-soft { box-shadow: var(--shadow-soft); }
   .shadow-glow { box-shadow: var(--shadow-glow); }
   .text-balance { text-wrap: balance; }
+  .scrollbar-blue {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--primary) 75%, white) transparent;
+  }
+  .scrollbar-blue::-webkit-scrollbar {
+    height: 10px;
+  }
+  .scrollbar-blue::-webkit-scrollbar-track {
+    background: color-mix(in oklab, var(--primary) 10%, transparent);
+    border-radius: 999px;
+  }
+  .scrollbar-blue::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--primary) 85%, white);
+    border-radius: 999px;
+    border: 2px solid color-mix(in oklab, var(--primary) 15%, transparent);
+  }
   .glass {
     background: color-mix(in oklab, var(--card) 70%, transparent);
     backdrop-filter: blur(12px);

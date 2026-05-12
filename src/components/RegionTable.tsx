@@ -2,8 +2,8 @@ import type { RegionContribution } from "@/lib/mockApi";
 
 export function RegionTable({ regions }: { regions: RegionContribution[] }) {
   return (
-    <div className="overflow-hidden rounded-lg border">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto rounded-lg border scrollbar-blue">
+      <table className="w-full min-w-[520px] text-sm">
         <thead className="bg-muted/60 text-xs uppercase tracking-wider text-muted-foreground">
           <tr>
             <th className="text-left px-4 py-2.5">Region</th>
