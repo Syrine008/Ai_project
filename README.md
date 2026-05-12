@@ -42,7 +42,7 @@ npm run dev
 
 ### One command on Windows (no need to “remember” two terminals)
 
-From `Ai_project-Ahmed`, run:
+From the repository root (folder that contains `backend/` and `src/`), run:
 
 ```powershell
 .\dev-all.ps1

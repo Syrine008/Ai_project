@@ -14,6 +14,8 @@ export interface AnalysisRequest {
     age?: number;
     sex?: "M" | "F" | "Other";
     notes?: string;
+    /** Optional — used only for “send report to patient”; also sent in analyze metadata when set. */
+    email?: string;
   };
 }
 
@@ -60,6 +62,9 @@ export interface AnalysisResult {
   timeline?: TimelineMarker[];
   network?: { nodes: string[]; edges: NetworkEdge[] };
   metrics?: { label: string; value: string; hint?: string }[];
+  /** Axis 4: PNG data URL of slice + Grad-CAM overlay when backend inference runs. */
+  gradCamDataUrl?: string;
+  modelLoaded?: boolean;
 }
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -270,10 +275,124 @@ function buildResultFor(req: AnalysisRequest): AnalysisResult {
   };
 }
 
-export async function runAnalysis(req: AnalysisRequest): Promise<AnalysisResult> {
-  // Simulate network + inference time
-  await wait(1800 + Math.random() * 1200);
+export type RunAnalysisOptions = {
+  file?: File | null;
+  /** Analyze 7.5 second part (.hdr or .img) → multipart ``file_analyze_pair``. Axis 4 only. */
+  analyzePairFile?: File | null;
+  /** When true, backend receives `metadata.demo=true` and no file upload. */
+  demo?: boolean;
+};
+
+/**
+ * If `VITE_API_BASE_URL` is set (e.g. `http://127.0.0.1:8000`), POSTs multipart
+ * to the axis Django endpoint; otherwise returns the in-browser mock.
+ */
+export async function runAnalysis(
+  req: AnalysisRequest,
+  options: RunAnalysisOptions = {},
+): Promise<AnalysisResult> {
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
+  const file = options.file ?? null;
+  const demo = options.demo ?? false;
+
+  if (baseUrl) {
+    const axis = AXES.find((a) => a.id === req.axisId)!;
+    const url = `${baseUrl.replace(/\/$/, "")}${axis.endpoint}`;
+    const fd = new FormData();
+    fd.append(
+      "metadata",
+      JSON.stringify({
+        demo,
+        age: req.patient.age ?? null,
+        sex: req.patient.sex ?? null,
+        patientId: req.patient.id ?? null,
+        notes: req.patient.notes ?? null,
+        patientEmail: req.patient.email?.trim() || null,
+      }),
+    );
+    if (file && !demo) {
+      fd.append("file", file);
+    }
+    const pair = options.analyzePairFile ?? null;
+    if (pair && !demo && req.axisId === "axis4-brain-aging") {
+      fd.append("file_analyze_pair", pair);
+    }
+    const res = await fetch(url, { method: "POST", body: fd });
+    if (!res.ok) {
+      const t = await res.text();
+      throw new Error(t || res.statusText);
+    }
+    const data = (await res.json()) as AnalysisResult;
+    if (!data.generatedAt) {
+      data.generatedAt = new Date().toISOString();
+    }
+    return data;
+  }
+
+  await wait(800 + Math.random() * 600);
   return buildResultFor(req);
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Payload safe to POST (drops huge Grad-CAM data URL). */
+export function analysisResultForEmail(result: AnalysisResult): AnalysisResult {
+  const { gradCamDataUrl: _, ...rest } = result;
+  return rest;
+}
+
+export async function sendReportToPatient(payload: {
+  to: string;
+  axisId: AxisId;
+  axisTitle: string;
+  patient?: AnalysisRequest["patient"];
+  result: AnalysisResult;
+}): Promise<{ followUpNote: boolean }> {
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
+  const to = payload.to.trim();
+  if (!EMAIL_RE.test(to)) {
+    throw new Error("Invalid email address.");
+  }
+  if (!baseUrl) {
+    await wait(400);
+    throw new Error(
+      "Email sending requires the Django API. Set VITE_API_BASE_URL (e.g. http://127.0.0.1:8000) in .env and restart Vite.",
+    );
+  }
+  const url = `${baseUrl.replace(/\/$/, "")}/api/send-report-email/`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      to,
+      axis_id: payload.axisId,
+      axis_title: payload.axisTitle,
+      patient: {
+        id: payload.patient?.id,
+        age: payload.patient?.age,
+        sex: payload.patient?.sex,
+      },
+      result: analysisResultForEmail(payload.result),
+    }),
+  });
+  const raw = await res.text();
+  let data = {} as { detail?: string; followUpNote?: boolean };
+  try {
+    data = JSON.parse(raw) as typeof data;
+  } catch {
+    /* Django HTML error page etc. */
+  }
+  if (!res.ok) {
+    if (typeof data.detail === "string" && data.detail.trim()) {
+      throw new Error(data.detail);
+    }
+    throw new Error(
+      res.status >= 500
+        ? `Server error (${res.status}). Check the Django terminal for the traceback.`
+        : `${res.status} ${res.statusText || "Send failed"}`,
+    );
+  }
+  return { followUpNote: Boolean(data.followUpNote) };
 }
 
 export interface CaseRecord {

@@ -16,6 +16,13 @@ dist-ssr
 .nitro
 *.local
 
+# Vite local env (API URL — do not commit real secrets if you add any)
+.env
+!.env.example
+
+# Django email secrets (copy from backend/.env.example)
+backend/.env
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

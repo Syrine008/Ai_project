@@ -1,12 +1,12 @@
 import { ShieldAlert } from "lucide-react";
 import type { AnalysisResult } from "@/lib/mockApi";
-import { ConfidenceBars } from "./ConfidenceBars";
+// import { ConfidenceBars } from "./ConfidenceBars"; // hidden for medical-focused demo (restore if needed)
 
 export function ResultCard({ result }: { result: AnalysisResult }) {
   return (
     <div className="rounded-xl border bg-gradient-card p-6 shadow-elegant animate-fade-in">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
+      <div className="flex items-start gap-4 flex-wrap">
+        <div className="min-w-0 flex-1">
           <div className="text-[11px] uppercase tracking-wider text-bluegray">
             AI-detected pattern
           </div>
@@ -17,7 +17,8 @@ export function ResultCard({ result }: { result: AnalysisResult }) {
             {result.summary}
           </p>
         </div>
-        <div className="text-right">
+        {/* Medical-focused demo: hide technical “top confidence” percentage (restore if needed)
+        <div className="text-right shrink-0">
           <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
             Top confidence
           </div>
@@ -25,6 +26,7 @@ export function ResultCard({ result }: { result: AnalysisResult }) {
             {(result.topConfidence * 100).toFixed(0)}%
           </div>
         </div>
+        */}
       </div>
 
       {result.metrics && result.metrics.length > 0 && (
@@ -43,12 +45,14 @@ export function ResultCard({ result }: { result: AnalysisResult }) {
         </div>
       )}
 
+      {/* Medical-focused demo: hide pseudo-confidence distribution bars
       <div className="mt-6">
         <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
           Confidence distribution
         </div>
         <ConfidenceBars items={result.confidence} />
       </div>
+      */}
 
       <div className="mt-6 flex items-start gap-2 rounded-lg border border-lavender/40 bg-lavender/10 px-3 py-2.5 text-xs text-foreground/80">
         <ShieldAlert className="h-4 w-4 text-lavender-foreground shrink-0 mt-0.5" />
