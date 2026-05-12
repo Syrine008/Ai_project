@@ -91,7 +91,7 @@ export const AXES: AxisDef[] = [
     description:
       "Voxel-wise brain age estimation that highlights regions aging faster than expected for the patient profile.",
     input: "MRI",
-    acceptedFormats: ".nii, .nii.gz, .dcm",
+    acceptedFormats: ".nii/.gz, .zip (hdr+img), .hdr+.img pair, .png/.jpg",
     endpoint: "/api/axis4-brain-aging/analyze/",
     icon: Hourglass,
     accent: "from-[oklch(0.65_0.13_220)] to-[oklch(0.78_0.07_295)]",

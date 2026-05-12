@@ -39,6 +39,7 @@ Shared infra lives in `common/` (model loader, base view, mock helpers).
 | 5 — Functional Connectivity        | `POST /api/axis5-functional-connectivity/analyze/` |
 | 6 — Neuromotor Video               | `POST /api/axis6-neuromotor-video/analyze/` |
 | 7 — Epilepsy Network               | `POST /api/axis7-epilepsy-network/analyze/` |
+| Patient summary email              | `POST /api/send-report-email/` (JSON — see below) |
 
 Request (multipart/form-data):
 - `file` — the upload (`.nii`, `.nii.gz`, `.dcm`, `.mp4`, `.edf`, `.csv` …)
@@ -73,6 +74,54 @@ After you drop the `.pkl` it becomes `true`.
 
 ---
 
+## Patient email (optional UI feature)
+
+The React axis pages can email an **HTML summary** of the last analysis to the address entered under **Patient metadata → Patient email**, via:
+
+`POST /api/send-report-email/`  
+`Content-Type: application/json`
+
+Body fields:
+
+| Field | Meaning |
+|-------|---------|
+| `to` | Recipient email (patient). |
+| `axis_id` | Same slug as the frontend `AxisId` (e.g. `axis4-brain-aging`). |
+| `axis_title` | Human-readable axis name for the subject line. |
+| `patient` | Optional `{ "id", "age", "sex" }` — shown as “Prepared for …”. |
+| `result` | The same `AnalysisResult` JSON returned by `/analyze/` (large `gradCamDataUrl` is stripped server-side for size). |
+
+**Behavior:** By default Django uses the **console email backend** — nothing is delivered; the full MIME message is printed in the terminal where `runserver` is running (good for local demos).
+
+### Step 1 — Try it without SMTP
+
+1. Start backend: `python manage.py runserver 127.0.0.1:8000`
+2. Frontend `.env`: `VITE_API_BASE_URL=http://127.0.0.1:8000`
+3. Run any axis analysis; enter a patient email; click **Send analysis to patient**
+4. Watch the **Django console** for the email HTML.
+
+### Step 2 — Real delivery (SMTP)
+
+**Easiest on your machine:** copy `backend/.env.example` to `backend/.env` and fill values (that file is gitignored). Django loads it automatically via `python-dotenv`.
+
+Alternatively, set environment variables before starting Django (examples — adjust for your provider):
+
+```bash
+set DJANGO_EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+set EMAIL_HOST=smtp.gmail.com
+set EMAIL_PORT=587
+set EMAIL_HOST_USER=youraccount@gmail.com
+set EMAIL_HOST_PASSWORD=your_app_password
+set EMAIL_USE_TLS=1
+set DEFAULT_FROM_EMAIL=brAIn Demo <youraccount@gmail.com>
+```
+
+For Gmail, create an **App password** (Google Account → Security → 2-Step Verification → App passwords). Other providers (SendGrid SMTP, Mailgun, Outlook) use their host/port and credentials.
+
+Production: use a dedicated transactional provider, SPF/DKIM, and tighten CORS/auth — this endpoint is intentionally open for the student demo.
+
+---
+
 ## Plugging in YOUR model — 3 steps
 
 > Replace `axisN_<name>` with your folder, e.g. `axis1_alzheimer_dementia`.
@@ -91,6 +140,11 @@ joblib-loads it. No code change needed for it to be picked up.
 > Anything pickle-able works (sklearn, xgboost, a thin wrapper around a
 > torch/tf model with a `.predict()` method, etc.). For very large models,
 > use `joblib.dump(model, path, compress=3)`.
+
+**Exception — `axis4_brain_aging`:** uses a PyTorch `state_dict` at
+`axis4_brain_aging/ml/checkpoints/best_ref_b_dropout03_lr5e5.pth` loaded by
+`BrainAgeCheckpointLoader` (see `ml/checkpoint.py`). Same HTTP contract; no
+`.pkl` required for that axis.
 
 ### Step 2 — Implement preprocessing + real inference
 

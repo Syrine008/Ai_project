@@ -7,21 +7,23 @@ import { ResultCard } from "@/components/ResultCard";
 import { ReportExportPanel } from "@/components/ReportExportPanel";
 import { ExplainabilityViewer } from "@/components/ExplainabilityViewer";
 import { RegionTable } from "@/components/RegionTable";
-import { SignalChart } from "@/components/SignalChart";
+// import { SignalChart } from "@/components/SignalChart"; // hidden for medical-focused demo (restore if needed)
 import { VideoInsightPanel } from "@/components/VideoInsightPanel";
 import { NetworkGraph } from "@/components/NetworkGraph";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { runAnalysis, type AnalysisResult } from "@/lib/mockApi";
 import type { AxisDef } from "@/lib/axes";
-import { Sparkles, FlaskConical, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
+// import { FlaskConical } from "lucide-react"; // used by commented “Try demo input” button
 import { toast } from "sonner";
 
 type Stage = "idle" | "running" | "done";
 
 export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
   const [file, setFile] = useState<File | null>(null);
-  const [meta, setMeta] = useState<PatientMeta>({ id: "", age: "", sex: "", notes: "" });
+  const [analyzePairFile, setAnalyzePairFile] = useState<File | null>(null);
+  const [meta, setMeta] = useState<PatientMeta>({ id: "", age: "", sex: "", notes: "", email: "" });
   const [stage, setStage] = useState<Stage>("idle");
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
@@ -46,21 +48,39 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
       toast.error("Please upload a file first.");
       return;
     }
+    const nm = file?.name.toLowerCase() ?? "";
+    const needsAnalyzeSidecar =
+      axis.id === "axis4-brain-aging" &&
+      !demo &&
+      (nm.endsWith(".hdr") || nm.endsWith(".img")) &&
+      !nm.endsWith(".zip");
+    if (needsAnalyzeSidecar && !analyzePairFile) {
+      toast.error(
+        'Analyze MRI needs both parts: add the matching file in "Analyze pair" (.hdr + .img), or upload one .zip containing both.',
+      );
+      return;
+    }
     setStage("running");
     setResult(null);
     try {
-      const r = await runAnalysis({
-        axisId: axis.id,
-        fileName: file?.name ?? "demo-input",
-        file: demo ? undefined : file ?? undefined,
-        demo,
-        patient: {
-          id: meta.id || undefined,
-          age: meta.age ? Number(meta.age) : undefined,
-          sex: (meta.sex as "M" | "F" | "Other") || undefined,
-          notes: meta.notes,
+      const r = await runAnalysis(
+        {
+          axisId: axis.id,
+          fileName: file?.name ?? "demo-input",
+          patient: {
+            id: meta.id || undefined,
+            age: meta.age ? Number(meta.age) : undefined,
+            sex: (meta.sex as "M" | "F" | "Other") || undefined,
+            notes: meta.notes,
+            email: meta.email.trim() || undefined,
+          },
         },
-      });
+        {
+          file: demo ? null : file,
+          demo,
+          analyzePairFile: demo ? null : analyzePairFile,
+        },
+      );
       setResult(r);
       setStage("done");
       toast.success("Analysis complete", { description: r.predictedClass });
@@ -107,8 +127,28 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
             <UploadZone
               accept={axis.acceptedFormats}
               hint={`${axis.input} · ${axis.acceptedFormats}`}
-              onFile={setFile}
+              onFile={(f) => {
+                setFile(f);
+                if (!f) setAnalyzePairFile(null);
+              }}
             />
+            {axis.id === "axis4-brain-aging" && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <div className="text-xs font-semibold mb-2 text-muted-foreground">
+                  Analyze 7.5 pair (optional)
+                </div>
+                <p className="text-[11px] text-muted-foreground mb-2 leading-relaxed">
+                  If your scan is two files (.hdr + .img): upload one above and the other here — order does not matter. Or zip both as{" "}
+                  <span className="font-mono">basename.hdr</span> +{" "}
+                  <span className="font-mono">basename.img</span> and upload the .zip once.
+                </p>
+                <UploadZone
+                  accept=".hdr,.img,.HDR,.IMG"
+                  hint=".hdr or .img (second half of Analyze pair)"
+                  onFile={setAnalyzePairFile}
+                />
+              </div>
+            )}
           </Card>
 
           <Card className="p-5">
@@ -128,6 +168,7 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
               Run analysis
               <ArrowRight className="h-4 w-4 ml-auto" />
             </Button>
+            {/* Demo / dev-only — uncomment for mock walkthrough + backend URL hint
             <Button
               variant="outline"
               onClick={() => handleRun(true)}
@@ -138,8 +179,19 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
               Try demo input
             </Button>
             <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-              Mock inference for demo. Production wiring: <span className="font-mono">{axis.endpoint}</span>
+              {import.meta.env.VITE_API_BASE_URL ? (
+                <>
+                  Backend: <span className="font-mono">{String(import.meta.env.VITE_API_BASE_URL)}</span>
+                  <span className="font-mono ml-1">{axis.endpoint}</span>
+                </>
+              ) : (
+                <>
+                  Mock mode. Set <span className="font-mono">VITE_API_BASE_URL</span> for Django (
+                  <span className="font-mono">{axis.endpoint}</span>).
+                </>
+              )}
             </p>
+            */}
           </Card>
         </div>
 
@@ -238,10 +290,23 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
                     </p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <ExplainabilityViewer
-                      variant={axis.id === "axis2-parkinson-atypical" ? "sagittal" : "axial"}
-                      hotspots={Math.min(6, result.regions.length)}
-                    />
+                    {axis.id === "axis4-brain-aging" && result.gradCamDataUrl ? (
+                      <div className="rounded-xl border bg-card overflow-hidden">
+                        <img
+                          src={result.gradCamDataUrl}
+                          alt="Grad-CAM overlay on input slice"
+                          className="w-full h-auto object-contain max-h-[320px]"
+                        />
+                        <div className="px-3 py-2 text-[10px] text-muted-foreground border-t">
+                          Grad-CAM (EfficientNet-B0) — saliency on the preprocessed slice
+                        </div>
+                      </div>
+                    ) : (
+                      <ExplainabilityViewer
+                        variant={axis.id === "axis2-parkinson-atypical" ? "sagittal" : "axial"}
+                        hotspots={Math.min(6, result.regions.length)}
+                      />
+                    )}
                     <RegionTable regions={result.regions} />
                   </div>
                 </Card>
@@ -259,6 +324,7 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
                 </Card>
               )}
 
+              {/* Medical-focused demo: synthetic signal chart hidden for axes that return placeholder waveforms
               {result.signal && (
                 <Card className="p-5 space-y-4">
                   <div>
@@ -270,6 +336,7 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
                   <SignalChart data={result.signal} markers={result.timeline} />
                 </Card>
               )}
+              */}
 
               {axis.input === "Video" && result.timeline && (
                 <Card className="p-5 space-y-4">
@@ -283,7 +350,17 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
                 </Card>
               )}
 
-              <ReportExportPanel result={result} />
+              <ReportExportPanel
+                result={result}
+                axisId={axis.id}
+                axisTitle={axis.title}
+                patientEmail={meta.email}
+                patient={{
+                  id: meta.id || undefined,
+                  age: meta.age ? Number(meta.age) : undefined,
+                  sex: (meta.sex as "M" | "F" | "Other") || undefined,
+                }}
+              />
             </>
           )}
         </div>

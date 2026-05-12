@@ -39,21 +39,27 @@ export function UploadZone({
           if (f) handleFile(f);
         }}
         className={cn(
-          "relative cursor-pointer rounded-xl border-2 border-dashed p-8 text-center transition-all",
+          "relative cursor-pointer rounded-xl border-2 border-dashed transition-all",
           "bg-card/40 hover:bg-card",
+          file ? "p-4 text-left sm:p-5" : "p-8 text-center",
           drag
             ? "border-primary bg-accent/40 scale-[1.01]"
             : "border-border",
         )}
       >
         {file ? (
-          <div className="flex items-center justify-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-teal/20 grid place-items-center">
+          <div className="flex w-full items-start gap-3">
+            <div className="h-10 w-10 shrink-0 rounded-lg bg-teal/20 grid place-items-center">
               <FileCheck2 className="h-5 w-5 text-teal" />
             </div>
-            <div className="text-left">
-              <div className="text-sm font-medium">{file.name}</div>
-              <div className="text-xs text-muted-foreground">
+            <div className="min-w-0 flex-1 overflow-hidden text-left">
+              <div
+                className="font-mono text-xs font-medium leading-snug break-all text-foreground sm:text-sm"
+                title={file.name}
+              >
+                {file.name}
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
                 {(file.size / 1024 / 1024).toFixed(2)} MB · ready to analyze
               </div>
             </div>
@@ -63,7 +69,7 @@ export function UploadZone({
                 e.stopPropagation();
                 handleFile(null);
               }}
-              className="ml-2 h-8 w-8 grid place-items-center rounded-md hover:bg-accent"
+              className="shrink-0 h-8 w-8 grid place-items-center rounded-md hover:bg-accent"
               aria-label="Remove file"
             >
               <X className="h-4 w-4" />

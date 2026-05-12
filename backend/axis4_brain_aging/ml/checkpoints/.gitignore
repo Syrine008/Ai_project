@@ -1,0 +1,2 @@
+# Large weights — copy `best_ref_b_dropout03_lr5e5.pth` locally for real inference.
+*.pth

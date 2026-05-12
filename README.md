@@ -40,9 +40,19 @@ npm install
 npm run dev
 ```
 
-Opens at <http://localhost:8080>. Frontend currently calls the **mock API**
-in `src/lib/mockApi.ts`. To hit the real Django backend, point
-`mockApi.ts` (or your axis page) at `http://localhost:8000/api/<axis-id>/analyze/`.
+### One command on Windows (no need to “remember” two terminals)
+
+From the repository root (folder that contains `backend/` and `src/`), run:
+
+```powershell
+.\dev-all.ps1
+```
+
+That **opens Django in a second PowerShell window** and starts the Vite dev server in this one. Same machine, two windows — you only typed **one** command.
+
+On **deployment / demo day**, you do **not** SSH in and run two dev servers. You **build** the frontend once (`npm run build`), host the static files (or let your platform serve them), and run Django with **gunicorn + nginx** (or a managed service). CI/CD or Docker Compose can start everything with a single `docker compose up` or one click on your host.
+
+`npm run dev` prints the local URL (often `:5173` or `:8080`). With `.env` containing `VITE_API_BASE_URL=http://127.0.0.1:8000`, the UI calls the real Django API instead of the in-browser mock in `src/lib/mockApi.ts`.
 
 ## Run the backend
 
@@ -78,6 +88,16 @@ For your axis (e.g. axis 1):
 5. Done — the view, serializer, persistence and frontend already work.
 
 Full step-by-step in [`backend/README.md`](backend/README.md).
+
+### Axis 4 — brain age (EfficientNet-B0)
+
+This repo ships a **real** PyTorch path under `backend/axis4_brain_aging/ml/`:
+
+- Checkpoint: `backend/axis4_brain_aging/ml/checkpoints/best_ref_b_dropout03_lr5e5.pth` (not committed if you add it to `.gitignore`; copy yours here).
+- Code is split into `architecture.py`, `checkpoint.py`, `preprocess.py`, `gradcam.py`, and `inference.py` (keeps `predict()` readable for reviewers).
+- **Analyze 7.5 (OASIS RAW `.hdr` + `.img`):** either zip both as matching names (`basename.hdr` / `basename.img`) and upload the `.zip`, or fill **both** upload slots on Axis 4 (order irrelevant). For notebooks, `preprocess.analyze_hdr_img_pair_to_nifti_gz_bytes(hdr, img)` produces `.nii.gz` bytes.
+
+**Frontend → Django:** copy [`.env.example`](.env.example) to `.env` and set `VITE_API_BASE_URL=http://127.0.0.1:8000`, then `npm run dev`. Without it, the UI stays on mock data.
 
 ---
 

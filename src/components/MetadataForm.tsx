@@ -14,6 +14,8 @@ export interface PatientMeta {
   age: string;
   sex: string;
   notes: string;
+  /** If set, “Send analysis to patient” is offered after a successful run (requires API + SMTP). */
+  email: string;
 }
 
 export function MetadataForm({
@@ -55,6 +57,17 @@ export function MetadataForm({
             <SelectItem value="Other">Other</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+      <div className="space-y-1.5 col-span-2">
+        <Label htmlFor="email" className="text-xs">Patient email (optional)</Label>
+        <Input
+          id="email"
+          type="email"
+          autoComplete="email"
+          placeholder="patient@example.com — for sending a summary after analysis"
+          value={value.email}
+          onChange={(e) => upd({ email: e.target.value })}
+        />
       </div>
       <div className="space-y-1.5 col-span-2">
         <Label htmlFor="notes" className="text-xs">Clinical notes (optional)</Label>
