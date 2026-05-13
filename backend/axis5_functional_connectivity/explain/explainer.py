@@ -40,17 +40,12 @@ def build_explanation(upload, metadata: dict, model: Optional[Any]) -> dict:
         "metrics": _metrics_payload(),
     }
     payload["network"] = {
-        "nodes": [
-            {"id": "DMN", "label": "Default Mode"},
-            {"id": "FPN", "label": "Frontoparietal"},
-            {"id": "SAL", "label": "Salience"},
-            {"id": "DAN", "label": "Dorsal Attention"},
-        ],
+        "nodes": ["DMN", "FPN", "SAL", "DAN"],
         "edges": [
-            {"source": "DMN", "target": "FPN", "weight": 0.71},
-            {"source": "FPN", "target": "SAL", "weight": 0.58},
-            {"source": "SAL", "target": "DAN", "weight": 0.44},
-            {"source": "DMN", "target": "DAN", "weight": 0.22},
+            {"from": "DMN", "to": "FPN", "weight": 0.71},
+            {"from": "FPN", "to": "SAL", "weight": 0.58},
+            {"from": "SAL", "to": "DAN", "weight": 0.44},
+            {"from": "DMN", "to": "DAN", "weight": 0.22},
         ],
     }
     payload["signal"] = make_signal(n=120, seed=11)

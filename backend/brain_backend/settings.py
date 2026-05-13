@@ -84,6 +84,12 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Axis 7 patient folders can contain many EDF/BDF files. Django's default is 100
+# uploaded files per multipart request, which can reject a folder before the view runs.
+DATA_UPLOAD_MAX_NUMBER_FILES = int(os.environ.get("DATA_UPLOAD_MAX_NUMBER_FILES", "10000"))
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get("DATA_UPLOAD_MAX_MEMORY_SIZE", "52428800"))
+FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get("FILE_UPLOAD_MAX_MEMORY_SIZE", "5242880"))
+
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
@@ -105,11 +111,19 @@ CORS_ALLOWED_ORIGINS = os.environ.get(
 ML_MODELS_DIR = BASE_DIR  # each app keeps its model under <app>/ml/
 
 # --- Email (patient report) ---
-# Default: print messages to the console (no SMTP). See backend/README.md for Gmail/SendGrid.
-EMAIL_BACKEND = os.environ.get(
-    "DJANGO_EMAIL_BACKEND",
-    "django.core.mail.backends.console.EmailBackend",
-)
+# If ``DJANGO_EMAIL_BACKEND`` is unset/empty, pick SMTP when ``EMAIL_HOST`` is set
+# (so filling ``backend/.env`` mail vars alone is enough). Otherwise fall back to
+# console — see backend/README.md for Gmail/SendGrid.
+_raw_email_backend = os.environ.get("DJANGO_EMAIL_BACKEND")
+_email_host = os.environ.get("EMAIL_HOST", "").strip()
+if _raw_email_backend is not None and str(_raw_email_backend).strip():
+    EMAIL_BACKEND = str(_raw_email_backend).strip()
+else:
+    EMAIL_BACKEND = (
+        "django.core.mail.backends.smtp.EmailBackend"
+        if _email_host
+        else "django.core.mail.backends.console.EmailBackend"
+    )
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")

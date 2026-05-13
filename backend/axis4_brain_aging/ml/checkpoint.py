@@ -9,6 +9,18 @@ import torch
 from .architecture import build_brain_age_efficientnet
 
 
+def _resolve_checkpoint_path(model_path: Path) -> Optional[Path]:
+    """Prefer `ml/checkpoints/<name>.pth`; also accept the same filename at the repo root."""
+    if model_path.exists():
+        return model_path
+    # .../backend/axis4_brain_aging/ml/checkpoints/x.pth → parents[4] = workspace root
+    if len(model_path.parents) >= 5:
+        alt = model_path.parents[4] / model_path.name
+        if alt.exists():
+            return alt
+    return None
+
+
 def _pick_device() -> torch.device:
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -27,14 +39,15 @@ class BrainAgeCheckpointLoader:
         if self._checked:
             return None
         self._checked = True
-        if not self.model_path.exists():
+        resolved = _resolve_checkpoint_path(self.model_path)
+        if resolved is None:
             return None
         try:
             model = build_brain_age_efficientnet()
             try:
-                state = torch.load(self.model_path, map_location="cpu", weights_only=True)
+                state = torch.load(resolved, map_location="cpu", weights_only=True)
             except TypeError:
-                state = torch.load(self.model_path, map_location="cpu")
+                state = torch.load(resolved, map_location="cpu")
             model.load_state_dict(state)
             device = _pick_device()
             model.to(device)

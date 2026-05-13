@@ -28,6 +28,20 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
   const [result, setResult] = useState<AnalysisResult | null>(null);
 
   const Icon = axis.icon;
+  const anomalyScore = typeof result?.anomalyScore === "number" ? result.anomalyScore : null;
+  const anomalyThreshold = typeof result?.threshold === "number" ? result.threshold : null;
+  const showAnomalyPanel =
+    result?.axisId === "axis5-functional-connectivity" &&
+    anomalyScore !== null &&
+    anomalyThreshold !== null;
+  const anomalyRatio =
+    showAnomalyPanel && anomalyThreshold > 0
+      ? anomalyScore / anomalyThreshold
+      : null;
+  const anomalyPercent = anomalyRatio !== null ? Math.min(100, anomalyRatio * 100) : 0;
+  const anomalyStatus = result?.isAnomaly ? "Atypical pattern detected" : "Normal brain pattern";
+  const frames = result?.nFrames ?? 16;
+  const hw = result?.hw ?? 64;
 
   const handleRun = async (demo = false) => {
     if (!demo && !file) {
@@ -56,7 +70,7 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
           patient: {
             id: meta.id || undefined,
             age: meta.age ? Number(meta.age) : undefined,
-            sex: (meta.sex as "M" | "F" | "Other") || undefined,
+            sex: meta.sex === "M" || meta.sex === "F" ? meta.sex : undefined,
             notes: meta.notes,
             email: meta.email.trim() || undefined,
           },
@@ -201,6 +215,71 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
             <>
               <ResultCard result={result} />
 
+              {showAnomalyPanel && (
+                <Card className="p-5 space-y-4">
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div>
+                      <div className="text-sm font-semibold">Anomaly score</div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Mean squared reconstruction error across {frames} frames x {hw}x{hw}.
+                      </p>
+                    </div>
+                    <span
+                      className={
+                        result?.isAnomaly
+                          ? "px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/15 text-red-600"
+                          : "px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-600"
+                      }
+                    >
+                      {anomalyStatus}
+                    </span>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
+                    <div>
+                      <div className="text-xs text-muted-foreground">
+                        Anomaly score: {anomalyScore?.toFixed(6)} | Threshold:{" "}
+                        {anomalyThreshold?.toFixed(6)}
+                      </div>
+                      <div className="mt-2 h-2 w-full rounded-full bg-muted overflow-hidden">
+                        <div
+                          className={result?.isAnomaly ? "h-full bg-red-500" : "h-full bg-emerald-500"}
+                          style={{ width: `${anomalyPercent}%` }}
+                        />
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+                        <span>
+                          Score/threshold: {anomalyRatio ? `${anomalyRatio.toFixed(2)}x` : "n/a"}
+                        </span>
+                        {typeof result.percentileOfNormal === "number" && (
+                          <span>Percentile: {result.percentileOfNormal.toFixed(1)}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">
+                        Reconstruction error map
+                      </div>
+                      {result.heatmapB64 ? (
+                        <img
+                          src={`data:image/png;base64,${result.heatmapB64}`}
+                          alt="Reconstruction error heatmap"
+                          className="w-full rounded-lg border"
+                        />
+                      ) : (
+                        <div className="rounded-lg border bg-muted/30 p-6 text-xs text-muted-foreground">
+                          Heatmap not available for this run.
+                        </div>
+                      )}
+                      <div className="mt-2 text-[11px] text-muted-foreground">
+                        Brighter pixels indicate higher deviation from the learned healthy baseline.
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
               {/* Axis-specific explainability */}
               {result.regions && (
                 <Card className="p-5 space-y-4">
@@ -279,7 +358,7 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
                 patient={{
                   id: meta.id || undefined,
                   age: meta.age ? Number(meta.age) : undefined,
-                  sex: (meta.sex as "M" | "F" | "Other") || undefined,
+                  sex: meta.sex === "M" || meta.sex === "F" ? meta.sex : undefined,
                 }}
               />
             </>

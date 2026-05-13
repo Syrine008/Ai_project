@@ -1,2 +1,3 @@
-*.pt filter=lfs diff=lfs merge=lfs -text
-*.joblib filter=lfs diff=lfs merge=lfs -text
+backend/**/*.pt filter=lfs diff=lfs merge=lfs -text
+backend/**/*.pth filter=lfs diff=lfs merge=lfs -text
+backend/**/*.joblib filter=lfs diff=lfs merge=lfs -text

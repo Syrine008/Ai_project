@@ -67,6 +67,13 @@ export interface AnalysisResult {
   /** Axis 4: PNG data URL of slice + Grad-CAM overlay when backend inference runs. */
   gradCamDataUrl?: string;
   modelLoaded?: boolean;
+  anomalyScore?: number;
+  threshold?: number;
+  isAnomaly?: boolean;
+  percentileOfNormal?: number;
+  heatmapB64?: string;
+  nFrames?: number;
+  hw?: number;
   seriesInfo?: {
     selectedSeries?: string;
     seriesDescription?: string;
