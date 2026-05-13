@@ -1,0 +1,4 @@
+{
+    "cnn_threshold": 0.5,
+    "fusion_threshold": 0.69
+}

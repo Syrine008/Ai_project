@@ -12,7 +12,9 @@ export interface AnalysisRequest {
   patient: {
     id?: string;
     age?: number;
-    sex?: "M" | "F" | "Other";
+    sex?: "M" | "F";
+    mmse?: number;
+    cdr?: number;
     notes?: string;
     /** Optional — used only for “send report to patient”; also sent in analyze metadata when set. */
     email?: string;
@@ -53,7 +55,7 @@ export interface AnalysisResult {
   caseId: string;
   generatedAt: string;
   predictedClass: string;
-  topConfidence: number;
+  topConfidence?: number | null;
   summary: string;
   disclaimer: string;
   confidence: ConfidenceItem[];
@@ -65,6 +67,59 @@ export interface AnalysisResult {
   /** Axis 4: PNG data URL of slice + Grad-CAM overlay when backend inference runs. */
   gradCamDataUrl?: string;
   modelLoaded?: boolean;
+  seriesInfo?: {
+    selectedSeries?: string;
+    seriesDescription?: string;
+    modality?: string;
+    numberOfSlices?: number;
+    reasonSelected?: string;
+    ignoredSeries?: string[];
+  };
+  availableSeries?: {
+    seriesDescription?: string;
+    modality?: string;
+    numberOfSlices?: number;
+    status?: "selected" | "candidate" | "rejected";
+    reason?: string;
+  }[];
+  warnings?: string[];
+  featureImportance?: { feature: string; label?: string; importance: number; std?: number }[];
+  probabilities?: {
+    alzheimerProbability?: number;
+    healthyProbability?: number;
+    cnnAlzheimerProbability?: number;
+    decisionThreshold?: number;
+    confidenceLevel?: "Low" | "Moderate" | "High";
+  };
+  mriFeatures?: {
+    label: string;
+    value: string | number;
+    unit?: string;
+    description?: string;
+  }[];
+  gradCam?: {
+    available: boolean;
+    imageDataUrl?: string;
+    sliceIndex?: number;
+    message?: string;
+    explanation?: string;
+  };
+  technicalDetails?: Record<string, unknown>;
+  researchInsights?: {
+    mmseCorrelation?: string;
+    longitudinal?: string;
+  };
+  metadataUsed?: string[];
+  metadataExcluded?: string[];
+  uploadedExamName?: string;
+  patientId?: string;
+  clinicalMetadata?: {
+    sex?: string | null;
+    age?: number | null;
+    mmse?: number | null;
+    cdr?: number | null;
+    notes?: string | null;
+  };
 }
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -93,30 +148,9 @@ function buildResultFor(req: AnalysisRequest): AnalysisResult {
 
   switch (req.axisId) {
     case "axis1-alzheimer-dementia":
-      return {
-        ...base,
-        predictedClass: "Profile more consistent with Alzheimer's-type pattern",
-        topConfidence: 0.82,
-        summary:
-          "AI-detected pattern shows medial temporal atrophy with hippocampal asymmetry, more consistent with an Alzheimer's-type profile than vascular dementia. Suggestive findings — clinical correlation required.",
-        confidence: [
-          { label: "Alzheimer's-type", value: 0.82 },
-          { label: "Vascular dementia", value: 0.11 },
-          { label: "Other dementia", value: 0.07 },
-        ],
-        regions: [
-          { region: "Hippocampus", side: "L", contribution: 0.91, note: "Marked atrophy" },
-          { region: "Hippocampus", side: "R", contribution: 0.78 },
-          { region: "Entorhinal cortex", side: "B", contribution: 0.74 },
-          { region: "Posterior cingulate", side: "B", contribution: 0.55 },
-          { region: "Parietal lobe", side: "L", contribution: 0.41 },
-        ],
-        metrics: [
-          { label: "Pattern strength", value: "High", hint: "Composite score 0.82" },
-          { label: "Asymmetry index", value: "0.18", hint: "L > R atrophy" },
-        ],
-      };
-
+      throw new Error(
+        "Real backend analysis is not connected. Please start the Django backend or configure the API URL.",
+      );
     case "axis2-parkinson-atypical":
       return {
         ...base,
@@ -295,6 +329,12 @@ export async function runAnalysis(
   const file = options.file ?? null;
   const demo = options.demo ?? false;
 
+  if (req.axisId === "axis1-alzheimer-dementia" && !baseUrl) {
+    throw new Error(
+      "Real backend analysis is not connected. Please start the Django backend or configure the API URL.",
+    );
+  }
+
   if (baseUrl) {
     const axis = AXES.find((a) => a.id === req.axisId)!;
     const url = `${baseUrl.replace(/\/$/, "")}${axis.endpoint}`;
@@ -305,6 +345,8 @@ export async function runAnalysis(
         demo,
         age: req.patient.age ?? null,
         sex: req.patient.sex ?? null,
+        mmse: req.patient.mmse ?? null,
+        cdr: req.patient.cdr ?? null,
         patientId: req.patient.id ?? null,
         notes: req.patient.notes ?? null,
         patientEmail: req.patient.email?.trim() || null,
@@ -317,7 +359,17 @@ export async function runAnalysis(
     if (pair && !demo && req.axisId === "axis4-brain-aging") {
       fd.append("file_analyze_pair", pair);
     }
-    const res = await fetch(url, { method: "POST", body: fd });
+    let res: Response;
+    try {
+      res = await fetch(url, { method: "POST", body: fd });
+    } catch (error) {
+      if (req.axisId === "axis1-alzheimer-dementia") {
+        throw new Error(
+          "Real backend analysis is not connected. Please start the Django backend or configure the API URL.",
+        );
+      }
+      throw error;
+    }
     if (!res.ok) {
       const t = await res.text();
       throw new Error(t || res.statusText);

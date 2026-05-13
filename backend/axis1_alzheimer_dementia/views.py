@@ -7,5 +7,5 @@ class AnalyzeView(BaseAnalyzeView):
         axis_id="axis1-alzheimer-dementia",
         predict=predict,
         loader=MODEL_LOADER,
-        accepted_extensions=('.nii', '.nii.gz', '.dcm'),
+        accepted_extensions=('.nii', '.nii.gz', '.dcm', '.zip'),
     )

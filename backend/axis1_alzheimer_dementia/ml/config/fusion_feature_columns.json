@@ -1,0 +1,19 @@
+[
+    "cnn_ad_probability",
+    "brain_voxel_count_proxy",
+    "brain_volume_ratio_proxy",
+    "intensity_mean",
+    "intensity_std",
+    "intensity_p10",
+    "intensity_p50",
+    "intensity_p90",
+    "left_right_asymmetry_proxy",
+    "bbox_x",
+    "bbox_y",
+    "bbox_z",
+    "central_slice_area_mean",
+    "central_slice_area_std",
+    "sex_encoded",
+    "education",
+    "ses"
+]

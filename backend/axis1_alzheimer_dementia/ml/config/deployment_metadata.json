@@ -1,0 +1,85 @@
+{
+    "project_name": "Alzheimer vs Healthy Classification using OASIS-1 and OASIS-2",
+    "final_model_description": "ConvNeXt-Tiny 2.5D CNN probability + MRI-derived anatomical proxy features + selected non-age metadata using Logistic Regression late fusion",
+    "cnn_branch": {
+        "model_name": "convnext_tiny",
+        "experiment_name": "convnext_tiny_25d",
+        "model_family": "mri_only_25d",
+        "checkpoint_file": "models/convnext_tiny_25d_checkpoint.pt",
+        "full_model_file": "models/convnext_tiny_25d_full_model.pt",
+        "torchscript_file": "models/convnext_tiny_25d_torchscript.pt",
+        "input_type": "2.5D MRI slice: previous slice + current slice + next slice",
+        "input_shape": [
+            3,
+            224,
+            224
+        ],
+        "cnn_decision_threshold": 0.5
+    },
+    "fusion_branch": {
+        "classifier": "logistic_regression",
+        "feature_set": "B_cnn_plus_mri_proxy_plus_non_age_metadata",
+        "model_file": "models/final_fusion_logistic_regression.joblib",
+        "decision_threshold": 0.69,
+        "feature_columns": [
+            "cnn_ad_probability",
+            "brain_voxel_count_proxy",
+            "brain_volume_ratio_proxy",
+            "intensity_mean",
+            "intensity_std",
+            "intensity_p10",
+            "intensity_p50",
+            "intensity_p90",
+            "left_right_asymmetry_proxy",
+            "bbox_x",
+            "bbox_y",
+            "bbox_z",
+            "central_slice_area_mean",
+            "central_slice_area_std",
+            "sex_encoded",
+            "education",
+            "ses"
+        ]
+    },
+    "required_fusion_inputs": [
+        "cnn_ad_probability",
+        "brain_voxel_count_proxy",
+        "brain_volume_ratio_proxy",
+        "intensity_mean",
+        "intensity_std",
+        "intensity_p10",
+        "intensity_p50",
+        "intensity_p90",
+        "left_right_asymmetry_proxy",
+        "bbox_x",
+        "bbox_y",
+        "bbox_z",
+        "central_slice_area_mean",
+        "central_slice_area_std",
+        "sex_encoded",
+        "education",
+        "ses"
+    ],
+    "metadata_inputs": {
+        "sex_encoded": "M=1, F=0",
+        "education": "years of education if available",
+        "ses": "socioeconomic status if available"
+    },
+    "excluded_from_final_model": [
+        "age"
+    ],
+    "age_policy": "Age was excluded from the final selected model because it may act as a confounding variable. Age-based models were kept only for bias analysis.",
+    "preprocessing_notes": {
+        "normalize_volume": "Use the same intensity normalization logic as the notebook.",
+        "slice_strategy": "Extract informative slices, build 2.5D inputs using previous/current/next slices.",
+        "image_size": 224,
+        "important_warning": "For exact reproduction, reuse the notebook preprocessing code. The saved model files alone are not sufficient without the same preprocessing pipeline."
+    },
+    "final_test_metrics": {
+        "accuracy": 0.7204301075268817,
+        "precision": 0.8064516129032258,
+        "recall": 0.5555555555555556,
+        "f1": 0.6578947368421053,
+        "auc": 0.7458333333333332
+    }
+}
