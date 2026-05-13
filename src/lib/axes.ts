@@ -134,9 +134,9 @@ export const AXES: AxisDef[] = [
     shortTitle: "Epilepsy Network",
     purpose: "Surface network instability patterns linked to epilepsy vulnerability.",
     description:
-      "EEG and signal-network analysis highlights instability windows and channels suggestive of heightened vulnerability.",
+      "Multimodal seizure-signal analysis highlights instability windows and informative channels suggestive of heightened epilepsy vulnerability.",
     input: "EEG / Signal",
-    acceptedFormats: ".edf, .bdf, .csv",
+    acceptedFormats: "patient run folder (.edf/.bdf)",
     endpoint: "/api/axis7-epilepsy-network/analyze/",
     icon: Zap,
     accent: "from-[oklch(0.68_0.18_60)] to-[oklch(0.78_0.07_295)]",
