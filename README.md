@@ -134,30 +134,6 @@ Possible hosting and deployment platforms:
 - Lovable Publish
 - GitHub Pages for static frontend hosting
 
-GitHub topics:
-
-```txt
-artificial-intelligence
-medical-ai
-neurology
-clinical-decision-support
-deep-learning
-machine-learning
-brain-mri
-fmri
-eeg
-computer-vision
-explainable-ai
-grad-cam
-django
-django-rest-framework
-react
-vite
-tanstack-start
-pytorch
-healthcare
-esprit-school-of-engineering
-```
 
 ---
 
