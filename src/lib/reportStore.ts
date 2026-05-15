@@ -9,14 +9,11 @@ export interface SavedAnalysisReport {
   axisTitle: string;
   patientId?: string | null;
   prediction: string;
-  probabilities?: {
-    alzheimerProbability?: number;
-    healthyProbability?: number;
-    decisionThreshold?: number;
-    confidenceLevel?: string;
-  };
+  probabilities?: AnalysisResult["probabilities"];
   uploadedExamName?: string;
   generatedAt: string;
+  pdfExportedAt?: string;
+  pdfFilename?: string;
   selectedSeries?: {
     selectedSeries?: string;
     seriesDescription?: string;
@@ -78,7 +75,27 @@ export function deleteSavedReport(caseId: string): SavedAnalysisReport[] {
 
 export function downloadReportJson(report: SavedAnalysisReport) {
   const patient = sanitizeFilePart(report.patientId || "unknown");
-  downloadJson(report.payload, `axis1_report_${sanitizeFilePart(report.caseId)}_${patient}.json`);
+  downloadJson(report.payload, `${sanitizeFilePart(report.axisId)}_${sanitizeFilePart(report.caseId)}_${patient}.json`);
+}
+
+export function downloadReportPdf(report: SavedAnalysisReport) {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return false;
+  }
+
+  const reportWindow = window.open("", "_blank", "width=980,height=1200");
+  if (!reportWindow) {
+    return false;
+  }
+
+  reportWindow.document.open();
+  reportWindow.document.write(buildPrintableReportHtml(report));
+  reportWindow.document.close();
+  reportWindow.focus();
+  reportWindow.setTimeout(() => {
+    reportWindow.print();
+  }, 250);
+  return true;
 }
 
 export function downloadAllReportsJson(reports: SavedAnalysisReport[]) {
@@ -116,6 +133,99 @@ function downloadJson(payload: unknown, filename: string) {
 
 function sanitizeFilePart(value: string) {
   return value.trim().replace(/[^a-zA-Z0-9_-]+/g, "_") || "unknown";
+}
+
+function buildPrintableReportHtml(report: SavedAnalysisReport) {
+  const payload = report.payload;
+  const gradCamUrl = payload.gradCamDataUrl || payload.gradCam?.imageDataUrl;
+  const confidenceRows = (payload.confidence || [])
+    .map(
+      (item) => `
+        <tr>
+          <td>${escapeHtml(item.label)}</td>
+          <td>${formatPercent(item.value)}</td>
+        </tr>`,
+    )
+    .join("");
+  const regionRows = (payload.regions || [])
+    .map(
+      (region) => `
+        <tr>
+          <td>${escapeHtml(region.region)}</td>
+          <td>${escapeHtml(region.side || "-")}</td>
+          <td>${formatPercent(region.contribution)}</td>
+          <td>${escapeHtml(region.note || "-")}</td>
+        </tr>`,
+    )
+    .join("");
+
+  return `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>${escapeHtml(report.pdfFilename || `${report.caseId}-report.pdf`)}</title>
+    <style>
+      body { font-family: Arial, sans-serif; color: #111827; margin: 32px; }
+      h1 { font-size: 24px; margin: 0 0 8px; }
+      h2 { font-size: 16px; margin: 24px 0 8px; }
+      p { line-height: 1.45; }
+      .meta { color: #4b5563; font-size: 12px; margin-bottom: 18px; }
+      .summary { border: 1px solid #d1d5db; padding: 14px; border-radius: 8px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 12px; }
+      th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; vertical-align: top; }
+      th { background: #f3f4f6; }
+      img { max-width: 100%; height: auto; border: 1px solid #d1d5db; border-radius: 8px; }
+      .disclaimer { margin-top: 24px; font-size: 11px; color: #4b5563; }
+      @page { margin: 18mm; }
+    </style>
+  </head>
+  <body>
+    <h1>${escapeHtml(report.axisTitle)}</h1>
+    <div class="meta">
+      Case ${escapeHtml(report.caseId)} | Patient ${escapeHtml(report.patientId || "Unknown")} | ${escapeHtml(formatDate(report.generatedAt))}
+    </div>
+    <div class="summary">
+      <strong>${escapeHtml(report.prediction)}</strong>
+      <p>${escapeHtml(payload.summary || "")}</p>
+    </div>
+    <h2>Confidence</h2>
+    <table>
+      <thead><tr><th>Label</th><th>Value</th></tr></thead>
+      <tbody>${confidenceRows || `<tr><td colspan="2">Not available</td></tr>`}</tbody>
+    </table>
+    <h2>Grad-CAM Explainability Preview</h2>
+    <p>Heatmap highlights image regions that influenced the CNN prediction.</p>
+    ${gradCamUrl ? `<img src="${escapeAttribute(gradCamUrl)}" alt="Grad-CAM heatmap preview" />` : `<p>Explainability output is not available for this case yet.</p>`}
+    <h2>Backend Region Output</h2>
+    <table>
+      <thead><tr><th>Region</th><th>Side</th><th>Contribution</th><th>Note</th></tr></thead>
+      <tbody>${regionRows || `<tr><td colspan="4">Not available</td></tr>`}</tbody>
+    </table>
+    <div class="disclaimer">${escapeHtml(payload.disclaimer || "")}</div>
+  </body>
+</html>`;
+}
+
+function formatPercent(value?: number | null) {
+  return typeof value === "number" && Number.isFinite(value) ? `${(value * 100).toFixed(1)}%` : "Not available";
+}
+
+function formatDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+}
+
+function escapeHtml(value: string) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function escapeAttribute(value: string) {
+  return escapeHtml(value).replace(/`/g, "&#96;");
 }
 
 function isSavedReport(value: unknown): value is SavedAnalysisReport {

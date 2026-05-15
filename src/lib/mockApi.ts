@@ -95,6 +95,8 @@ export interface AnalysisResult {
     alzheimerProbability?: number;
     healthyProbability?: number;
     cnnAlzheimerProbability?: number;
+    probability_PD?: number;
+    probability_atypical?: number;
     decisionThreshold?: number;
     confidenceLevel?: "Low" | "Moderate" | "High";
   };
@@ -110,7 +112,10 @@ export interface AnalysisResult {
     sliceIndex?: number;
     message?: string;
     explanation?: string;
+    reportPath?: string;
   };
+  explainability?: Record<string, unknown>;
+  explainabilityWarning?: string;
   technicalDetails?: Record<string, unknown>;
   researchInsights?: {
     mmseCorrelation?: string;
@@ -161,25 +166,25 @@ function buildResultFor(req: AnalysisRequest): AnalysisResult {
     case "axis2-parkinson-atypical":
       return {
         ...base,
-        predictedClass: "Profile more consistent with idiopathic Parkinson's disease",
-        topConfidence: 0.71,
+        disclaimer: "Research decision-support output only. This result is not a clinical diagnosis.",
+        predictedClass: "PD pattern",
+        topConfidence: 0.5,
         summary:
-          "Substantia nigra and putaminal cues align more with idiopathic PD than MSA/PSP. Atypical features remain possible — recommend longitudinal follow-up.",
+          "Backend response unavailable. Start Django to run the Parkinson vs atypical parkinsonism CNN.",
         confidence: [
-          { label: "Parkinson's disease", value: 0.71 },
-          { label: "MSA", value: 0.16 },
-          { label: "PSP", value: 0.09 },
-          { label: "Other", value: 0.04 },
+          { label: "PD pattern", value: 0.5 },
+          { label: "Atypical parkinsonian pattern", value: 0.5 },
         ],
-        regions: [
-          { region: "Substantia nigra", side: "B", contribution: 0.88 },
-          { region: "Putamen", side: "L", contribution: 0.62 },
-          { region: "Midbrain", side: "B", contribution: 0.49, note: "Hummingbird sign absent" },
-          { region: "Pons", side: "B", contribution: 0.31 },
-        ],
-        metrics: [
-          { label: "Midbrain/Pons ratio", value: "0.61", hint: "Within PD-typical range" },
-        ],
+        probabilities: {
+          probability_PD: 0.5,
+          probability_atypical: 0.5,
+          decisionThreshold: 0.52,
+        },
+        modelLoaded: false,
+        gradCam: {
+          available: false,
+          message: "Explainability output is not available for this case yet.",
+        },
       };
 
     case "axis3-cerebellar-dysfunction":
@@ -346,18 +351,24 @@ export async function runAnalysis(
     const axis = AXES.find((a) => a.id === req.axisId)!;
     const url = `${baseUrl.replace(/\/$/, "")}${axis.endpoint}`;
     const fd = new FormData();
+    const metadata =
+      req.axisId === "axis2-parkinson-atypical"
+        ? demo
+          ? { demo: true }
+          : {}
+        : {
+            demo,
+            age: req.patient.age ?? null,
+            sex: req.patient.sex ?? null,
+            mmse: req.patient.mmse ?? null,
+            cdr: req.patient.cdr ?? null,
+            patientId: req.patient.id ?? null,
+            notes: req.patient.notes ?? null,
+            patientEmail: req.patient.email?.trim() || null,
+          };
     fd.append(
       "metadata",
-      JSON.stringify({
-        demo,
-        age: req.patient.age ?? null,
-        sex: req.patient.sex ?? null,
-        mmse: req.patient.mmse ?? null,
-        cdr: req.patient.cdr ?? null,
-        patientId: req.patient.id ?? null,
-        notes: req.patient.notes ?? null,
-        patientEmail: req.patient.email?.trim() || null,
-      }),
+      JSON.stringify(metadata),
     );
     if (file && !demo) {
       fd.append("file", file);

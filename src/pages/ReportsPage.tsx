@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Download, FileText, Search, Trash2 } from "lucide-react";
+import { Download, FileDown, FileText, Search, Trash2 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   downloadAllReportsJson,
+  downloadReportPdf,
   downloadReportJson,
   deleteSavedReport,
   loadSavedReports,
@@ -19,6 +20,12 @@ const pct = (value?: number) =>
 
 function reportMainProbability(report: SavedAnalysisReport) {
   const prediction = report.prediction.toLowerCase();
+  if (report.axisId === "axis2-parkinson-atypical") {
+    if (prediction.includes("atypical")) {
+      return pct(report.probabilities?.probability_atypical ?? report.payload.topConfidence);
+    }
+    return pct(report.probabilities?.probability_PD ?? report.payload.topConfidence);
+  }
   if (prediction.includes("alzheimer-like")) {
     return pct(report.probabilities?.alzheimerProbability);
   }
@@ -65,6 +72,17 @@ export function ReportsPage() {
     toast.success("Report deleted");
   };
 
+  const handleDownloadPdf = (report: SavedAnalysisReport) => {
+    const opened = downloadReportPdf(report);
+    if (opened) {
+      toast.success("PDF export opened", { description: report.caseId });
+    } else {
+      toast.error("Could not open PDF export", {
+        description: "Allow pop-ups for this site and try again.",
+      });
+    }
+  };
+
   return (
     <Layout title="Reports" subtitle="All decision-support reports across axes.">
       <div className="mb-5 flex flex-wrap items-center gap-3">
@@ -87,7 +105,7 @@ export function ReportsPage() {
           <FileText className="mx-auto h-10 w-10 text-bluegray" />
           <div className="mt-3 font-medium">No reports generated yet.</div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Run an Axis 1 MRI analysis to generate the first report.
+            Run an analysis or export an Axis 2 PDF to generate the first report.
           </p>
         </Card>
       ) : filteredReports.length === 0 ? (
@@ -110,6 +128,11 @@ export function ReportsPage() {
                   {report.uploadedExamName && (
                     <div className="mt-1 text-xs text-muted-foreground">{report.uploadedExamName}</div>
                   )}
+                  {report.pdfExportedAt && (
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      PDF exported {reportDate(report.pdfExportedAt)}
+                    </div>
+                  )}
                 </div>
                 <div className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
                   <FileText className="h-5 w-5" />
@@ -122,6 +145,11 @@ export function ReportsPage() {
                 </span>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2">
+                {report.pdfFilename && (
+                  <Button variant="outline" className="gap-1.5" onClick={() => handleDownloadPdf(report)}>
+                    <FileDown className="h-4 w-4" /> PDF
+                  </Button>
+                )}
                 <Button variant="outline" className="gap-1.5" onClick={() => downloadReportJson(report)}>
                   <Download className="h-4 w-4" /> Download report
                 </Button>
