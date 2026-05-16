@@ -10,6 +10,11 @@ This project was developed as part of an academic artificial intelligence engine
 
 The repository contains two main parts: a frontend built with **React**, **TanStack Start**, and **Vite**, and a backend built with **Django** and **Django REST Framework**. The backend is organized into one application per neurological axis and is fully wired end-to-end with realistic mock outputs for demo purposes.
 
+The project is deployed online:
+
+- **Frontend deployment:** https://b-r-a-i-n-mu.vercel.app
+- **Backend deployment:** https://b-r-a-i-n-46js.onrender.com
+
 ## Features
 
 - Upload neurological data such as **MRI**, **fMRI**, **EEG**, **video**, and signal files.
@@ -18,15 +23,16 @@ The repository contains two main parts: a frontend built with **React**, **TanSt
 - Support multiple neurological analysis axes in one unified clinical platform.
 - Use realistic mock outputs for demo and testing.
 - Integrate trained `.pkl` models or PyTorch checkpoints.
-- Support explainability methods such as **Grad-CAM**, **SHAP**, brain region activation, signal interpretation, and network-level analysis.
+- Support explainability methods such as **Grad-CAM**, brain region activation, signal interpretation, and network-level analysis.
 - Connect the frontend to the Django REST API using environment variables.
 - Provide a demo-ready platform for academic, medical, and AI project presentations.
+- Deploy the frontend using **Vercel** and the backend using **Render**.
 
 The platform currently includes **7 neurological axes**:
 
 | # | Axis | Data Type | Backend Folder |
 |---|------|-----------|----------------|
-| 1 | Alzheimer’s vs Healthy subjects | MRI | `backend/axis1_alzheimer_dementia/` |
+| 1 | Alzheimer’s vs Healthy Subjects | MRI | `backend/axis1_alzheimer_dementia/` |
 | 2 | Parkinson’s vs Atypical Parkinsonism | MRI | `backend/axis2_parkinson_atypical/` |
 | 3 | Cerebellar Dysfunction | MRI | `backend/axis3_cerebellar_dysfunction/` |
 | 4 | Uneven Brain Aging | MRI | `backend/axis4_brain_aging/` |
@@ -42,15 +48,18 @@ The platform currently includes **7 neurological axes**:
 - **TanStack Start**
 - **Vite**
 - **TypeScript**
+- **Tailwind CSS**
 - Responsive user interface
 - Environment-based API configuration
 - Mock API support for demo mode
+- Deployed with **Vercel**
 
 ### Backend
 
 - **Python**
 - **Django**
 - **Django REST Framework**
+- **Gunicorn**
 - Modular Django architecture
 - One backend application per neurological axis
 - REST API endpoints
@@ -59,6 +68,7 @@ The platform currently includes **7 neurological axes**:
 - Mock and real-model prediction support
 - Clinical report generation
 - Explainability module per axis
+- Deployed with **Render**
 
 ### Other Tools
 
@@ -72,21 +82,12 @@ The platform currently includes **7 neurological axes**:
 - **Computer Vision**
 - **Explainable AI**
 - **Grad-CAM**
-- **SHAP**
 - **PyTorch**
 - **scikit-learn**
 - **GitHub**
 - **GitHub Education for Students**
-- **Docker**
-- **Docker Compose**
-- **Gunicorn**
-- **Nginx**
+- **Vercel**
 - **Render**
-- **Railway**
-- **Fly.io**
-- **Heroku**
-- **DigitalOcean**
-- **Namecheap**
 
 ## Directory Structure
 
@@ -107,6 +108,7 @@ The platform currently includes **7 neurological axes**:
     ├── axis5_functional_connectivity/
     ├── axis6_neuromotor_video/
     ├── axis7_epilepsy_network/
+    ├── brain_backend/
     ├── manage.py
     └── requirements.txt
 ```
@@ -130,8 +132,8 @@ backend/axisN_axis_name/
 Clone the repository:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/B-R-A-I-N.git
-cd B-R-A-I-N
+git clone https://github.com/Syrine008/Ai_project.git
+cd Ai_project
 ```
 
 Run the frontend from the repository root:
@@ -163,6 +165,12 @@ Then set:
 
 ```env
 VITE_API_BASE_URL=http://127.0.0.1:8000
+```
+
+For the deployed backend, use:
+
+```env
+VITE_API_BASE_URL=https://b-r-a-i-n-46js.onrender.com
 ```
 
 Run the backend:
@@ -223,6 +231,13 @@ and:
 
 ```bash
 backend/axisN_axis_name/explain/explainer.py
+```
+
+The deployed version of the project is available here:
+
+```txt
+Frontend: https://b-r-a-i-n-mu.vercel.app
+Backend: https://b-r-a-i-n-46js.onrender.com
 ```
 
 ## Acknowledgments
