@@ -214,7 +214,7 @@ Then open the corresponding axis page in the frontend and click "Run analysis".
 3. `python manage.py migrate`.
 4. Make sure every `axisN_<name>/ml/axisN_<name>_model.pkl` ships with
    your container/image (or is mounted from object storage on boot).
-5. Run with gunicorn/uvicorn:
-   `gunicorn brain_backend.wsgi --bind 0.0.0.0:8000 --workers 3`.
+5. Run with the Render start command:
+   `gunicorn brain_backend.wsgi:application --timeout 120 --workers 1 --threads 2`.
 6. Point the frontend at the deployed URL (replace the mock calls in
    `src/lib/mockApi.ts` or wire a real fetch in each axis page).

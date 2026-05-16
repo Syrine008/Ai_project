@@ -6,20 +6,23 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from common.base import AxisConfig, new_case_id
-from .ml.inference import MODEL_LOADER, predict
 
 
 class AnalyzeView(APIView):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
-    axis_config = AxisConfig(
-        axis_id="axis7-epilepsy-network",
-        predict=predict,
-        loader=MODEL_LOADER,
-        accepted_extensions=(".edf", ".bdf", ".csv", ".json", ".tsv", ".zip", ".nii", ".nii.gz"),
-    )
+
+    def get_axis_config(self) -> AxisConfig:
+        from .ml.inference import MODEL_LOADER, predict
+
+        return AxisConfig(
+            axis_id="axis7-epilepsy-network",
+            predict=predict,
+            loader=MODEL_LOADER,
+            accepted_extensions=(".edf", ".bdf", ".csv", ".json", ".tsv", ".zip", ".nii", ".nii.gz"),
+        )
 
     def post(self, request, *args, **kwargs):
-        cfg = self.axis_config
+        cfg = self.get_axis_config()
         metadata_raw = request.data.get("metadata", "{}")
         if isinstance(metadata_raw, str):
             try:

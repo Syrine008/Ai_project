@@ -4,6 +4,10 @@ from django.urls import include, path
 
 
 def health(_request):
+    return JsonResponse({"status": "ok"})
+
+
+def api_health(_request):
     return JsonResponse({"status": "ok", "service": "brAIn backend"})
 
 
@@ -30,8 +34,9 @@ code{background:#f0f0f0;padding:0.1em 0.35em;border-radius:4px;} a{color:#2563eb
 urlpatterns = [
     path("", root),
     path("admin/", admin.site.urls),
+    path("health/", health),
     path("api/", include("common.urls")),
-    path("api/health/", health),
+    path("api/health/", api_health),
     path("api/axis1-alzheimer-dementia/", include("axis1_alzheimer_dementia.urls")),
     path("api/axis2-parkinson-atypical/", include("axis2_parkinson_atypical.urls")),
     path("api/axis3-cerebellar-dysfunction/", include("axis3_cerebellar_dysfunction.urls")),

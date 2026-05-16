@@ -10,35 +10,36 @@ from rest_framework.views import APIView
 
 from common.base import AxisConfig, new_case_id
 
-from .ml.inference import MODEL_LOADER, predict
-
 
 class AnalyzeView(APIView):
     """Same contract as ``BaseAnalyzeView`` plus optional Analyze companion upload."""
 
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
-    axis_config = AxisConfig(
-        axis_id="axis4-brain-aging",
-        predict=predict,
-        loader=MODEL_LOADER,
-        accepted_extensions=(
-            ".nii",
-            ".nii.gz",
-            ".png",
-            ".jpg",
-            ".jpeg",
-            ".webp",
-            ".zip",
-            ".hdr",
-            ".img",
-            ".HDR",
-            ".IMG",
-        ),
-    )
+    def get_axis_config(self) -> AxisConfig:
+        from .ml.inference import MODEL_LOADER, predict
+
+        return AxisConfig(
+            axis_id="axis4-brain-aging",
+            predict=predict,
+            loader=MODEL_LOADER,
+            accepted_extensions=(
+                ".nii",
+                ".nii.gz",
+                ".png",
+                ".jpg",
+                ".jpeg",
+                ".webp",
+                ".zip",
+                ".hdr",
+                ".img",
+                ".HDR",
+                ".IMG",
+            ),
+        )
 
     def post(self, request, *args, **kwargs):
-        cfg = self.axis_config
+        cfg = self.get_axis_config()
 
         upload = request.FILES.get("file")
         pair_upload = request.FILES.get("file_analyze_pair")
@@ -80,7 +81,7 @@ class AnalyzeView(APIView):
 
         case_id = new_case_id()
         model = cfg.loader.get()
-        result = predict(upload, model, merged_meta)
+        result = cfg.predict(upload, model, merged_meta)
 
         persist_meta = {
             k: v for k, v in merged_meta.items() if not str(k).startswith("_internal_")
