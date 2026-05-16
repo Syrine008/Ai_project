@@ -90,8 +90,11 @@ class BaseAnalyzeView(APIView):
     parser_classes = [MultiPartParser, FormParser, JSONParser]
     axis_config: AxisConfig
 
+    def get_axis_config(self) -> AxisConfig:
+        return self.axis_config
+
     def post(self, request, *args, **kwargs):
-        cfg = self.axis_config
+        cfg = self.get_axis_config()
 
         upload = request.FILES.get("file")
         metadata_raw = request.data.get("metadata", "{}")
