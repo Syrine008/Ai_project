@@ -23,7 +23,7 @@ export type AxisId =
 export interface AxisDef {
   id: AxisId;
   number: number;
-  slug: string;
+  slug: "alzheimer-dementia" | "parkinson-atypical" | "cerebellar-dysfunction" | "brain-aging" | "functional-connectivity" | "neuromotor-video" | "epilepsy-network";
   title: string;
   shortTitle: string;
   purpose: string;
@@ -72,11 +72,11 @@ export const AXES: AxisDef[] = [
     slug: "cerebellar-dysfunction",
     title: "Cerebellar Dysfunction",
     shortTitle: "Cerebellum",
-    purpose: "Quantify cerebellar involvement in cognitive and motor dysfunction.",
+    purpose: "Assess healthy, motor-anomaly and cognitive-anomaly patterns in cerebellum MRI.",
     description:
-      "Region-level cerebellar profiling to surface subtle structural changes that may contribute to dementia or ataxia.",
+      "Two-stage 3D MRI classification with cerebellum preprocessing and Grad-CAM attention images.",
     input: "MRI",
-    acceptedFormats: ".nii, .nii.gz, .dcm",
+    acceptedFormats: ".nii, .nii.gz, .npy",
     endpoint: "/api/axis3-cerebellar-dysfunction/analyze/",
     icon: Waves,
     accent: "from-[oklch(0.65_0.13_165)] to-[oklch(0.72_0.10_200)]",

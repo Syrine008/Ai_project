@@ -1,3 +1,4 @@
+import { apiFetch } from "@/lib/http";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, FileCheck2, FolderOpen, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
@@ -13,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { getAxisById } from "@/lib/axes";
-import { type AnalysisResult } from "@/lib/mockApi";
+import { type AnalysisResult } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 type Stage = "idle" | "running" | "done";
@@ -110,7 +111,7 @@ async function runAxis7AnalysisRequest(files: File[], context: Axis7Context): Pr
   const endpoint = "/api/axis7-epilepsy-network/analyze/";
   const apiRoot = baseUrl || "http://127.0.0.1:8000";
   const url = `${apiRoot.replace(/\/$/, "")}${endpoint}`;
-  const res = await fetch(url, { method: "POST", body: fd });
+  const res = await apiFetch(url, { method: "POST", body: fd });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(text || `Axis 7 upload failed (${res.status}).`);

@@ -13,7 +13,7 @@ import {
 } from "@/lib/reportStore";
 import { toast } from "sonner";
 
-const pct = (value?: number) =>
+const pct = (value?: number | null) =>
   typeof value === "number" && Number.isFinite(value) ? `${Math.round(value * 100)}%` : "Not available";
 
 function confidence(report: SavedAnalysisReport) {
@@ -21,6 +21,7 @@ function confidence(report: SavedAnalysisReport) {
 }
 
 function primaryProbability(report: SavedAnalysisReport) {
+  if (report.axisId === "axis3-cerebellar-dysfunction") return pct(report.payload.topConfidence ?? undefined);
   const prediction = report.prediction.toLowerCase();
   if (prediction.includes("alzheimer-like")) {
     return pct(report.probabilities?.alzheimerProbability);
@@ -61,7 +62,7 @@ export function CaseHistoryPage() {
   };
 
   return (
-    <Layout title="Case History" subtitle="All saved real analyses across patients and axes.">
+    <Layout title="Case History" subtitle="Reports saved in this browser. Server records are managed separately.">
       <div className="relative mb-5 max-w-md">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -77,7 +78,7 @@ export function CaseHistoryPage() {
           <FileText className="mx-auto h-10 w-10 text-bluegray" />
           <div className="mt-3 font-medium">No reports generated yet.</div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Run an Axis 1 MRI analysis to generate the first report.
+            Complete an analysis and save its report to see it here.
           </p>
         </Card>
       ) : filteredReports.length === 0 ? (
@@ -87,7 +88,7 @@ export function CaseHistoryPage() {
           <p className="mt-1 text-sm text-muted-foreground">Adjust the search to view saved real analyses.</p>
         </Card>
       ) : (
-        <div className="overflow-hidden rounded-xl border bg-card">
+        <div className="overflow-x-auto rounded-xl border bg-card">
           <table className="w-full text-sm">
             <thead className="bg-muted/60 text-xs uppercase tracking-wider text-muted-foreground">
               <tr>

@@ -8,7 +8,6 @@ from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
 from rest_framework import status
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -20,8 +19,6 @@ logger = logging.getLogger(__name__)
 class SendReportEmailView(APIView):
     """POST JSON body to email an HTML summary to the patient (SMTP configurable)."""
 
-    authentication_classes = []
-    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         try:
@@ -29,11 +26,13 @@ class SendReportEmailView(APIView):
         except Exception as exc:  # noqa: BLE001 — never return bare Django HTML 500 to the SPA
             logger.exception("send-report-email failed")
             return Response(
-                {"detail": f"Email handler error: {exc}"},
+                {"detail": "Unable to send the report. Contact your workspace administrator."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
     def _post_impl(self, request, *args, **kwargs):
+        if settings.EMAIL_BACKEND != "django.core.mail.backends.smtp.EmailBackend":
+            return Response({"detail": "Email delivery is not configured for this workspace."}, status=503)
         to_addr = (request.data.get("to") or "").strip()
         axis_id = (request.data.get("axis_id") or "").strip()
         axis_title = (request.data.get("axis_title") or axis_id or "Analysis").strip()
@@ -81,7 +80,7 @@ class SendReportEmailView(APIView):
             msg.send(fail_silently=False)
         except Exception as exc:  # noqa: BLE001 — surface SMTP errors to the UI in dev
             return Response(
-                {"detail": f"Could not send email: {exc}", "hint": "Check EMAIL_* settings and SMTP credentials."},
+                {"detail": "Unable to deliver the report. Contact your workspace administrator."},
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 

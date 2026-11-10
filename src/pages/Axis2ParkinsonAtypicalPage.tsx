@@ -1,3 +1,4 @@
+import { apiFetch } from "@/lib/http";
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { UploadZone } from "@/components/UploadZone";
@@ -13,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getAxisById } from "@/lib/axes";
-import type { AnalysisResult, ConfidenceItem } from "@/lib/mockApi";
+import type { AnalysisResult, ConfidenceItem } from "@/lib/api";
 import {
   downloadReportPdf,
   saveAnalysisReport,
@@ -56,16 +57,16 @@ async function runAxis2BackendAnalysis(file: File): Promise<AnalysisResult> {
   const url = `${baseUrl.replace(/\/$/, "")}/api/axis2-parkinson-atypical/analyze/`;
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("metadata", JSON.stringify({ demo: true }));
+  formData.append("metadata", JSON.stringify({}));
 
   let response: Response;
   try {
-    response = await fetch(url, {
+    response = await apiFetch(url, {
       method: "POST",
       body: formData,
     });
-  } catch {
-    throw new Error(BACKEND_ERROR);
+  } catch (error) {
+    throw error instanceof Error ? error : new Error(BACKEND_ERROR);
   }
 
   if (!response.ok) {

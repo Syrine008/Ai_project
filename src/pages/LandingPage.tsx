@@ -29,7 +29,7 @@ export function LandingPage() {
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
             <Button asChild variant="ghost" size="sm">
-              <Link to="/dashboard">Sign in</Link>
+              <Link to="/dashboard">Workspace</Link>
             </Button>
             <Button asChild size="sm" className="gap-1.5">
               <Link to="/dashboard">
@@ -46,7 +46,7 @@ export function LandingPage() {
         <div className="relative max-w-7xl mx-auto px-6 pt-24 pb-32 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border bg-card/70 px-3 py-1 text-xs text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-teal animate-pulse-soft" />
-            AI-powered neurology decision support · v1.0 demo
+            Neurology research · clinician review required
           </div>
           <h1 className="mt-6 text-5xl md:text-7xl font-semibold tracking-tight text-balance">
             <span className="bg-gradient-to-br from-primary via-[oklch(0.45_0.10_230)] to-teal bg-clip-text text-transparent">

@@ -130,6 +130,10 @@ class BaseAnalyzeView(APIView):
 
         case_id = new_case_id()
         model = cfg.loader.get()
+        if model is None:
+            return Response({"detail": "The trained model for this analysis is unavailable."}, status=503)
+        if metadata.get("demo"):
+            return Response({"detail": "Demo predictions are not available in this workspace."}, status=400)
         result = cfg.predict(upload, model, metadata)
 
         # Always stamp the canonical fields

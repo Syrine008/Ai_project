@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getAxisById } from "@/lib/axes";
-import { runAnalysis, type AnalysisResult } from "@/lib/mockApi";
+import { runAnalysis, type AnalysisResult } from "@/lib/api";
 import { saveAnalysisReport, type SavedAnalysisReport } from "@/lib/reportStore";
 import { toast } from "sonner";
 

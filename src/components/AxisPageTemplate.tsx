@@ -7,15 +7,13 @@ import { ResultCard } from "@/components/ResultCard";
 import { ReportExportPanel } from "@/components/ReportExportPanel";
 import { ExplainabilityViewer } from "@/components/ExplainabilityViewer";
 import { RegionTable } from "@/components/RegionTable";
-// import { SignalChart } from "@/components/SignalChart"; // hidden for medical-focused demo (restore if needed)
 import { VideoInsightPanel } from "@/components/VideoInsightPanel";
 import { NetworkGraph } from "@/components/NetworkGraph";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { runAnalysis, type AnalysisResult } from "@/lib/mockApi";
+import { runAnalysis, type AnalysisResult } from "@/lib/api";
 import type { AxisDef } from "@/lib/axes";
 import { Sparkles, ArrowRight } from "lucide-react";
-// import { FlaskConical } from "lucide-react"; // used by commented “Try demo input” button
 import { toast } from "sonner";
 
 type Stage = "idle" | "running" | "done";
@@ -35,23 +33,20 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
     anomalyScore !== null &&
     anomalyThreshold !== null;
   const anomalyRatio =
-    showAnomalyPanel && anomalyThreshold > 0
-      ? anomalyScore / anomalyThreshold
-      : null;
+    showAnomalyPanel && anomalyThreshold > 0 ? anomalyScore / anomalyThreshold : null;
   const anomalyPercent = anomalyRatio !== null ? Math.min(100, anomalyRatio * 100) : 0;
   const anomalyStatus = result?.isAnomaly ? "Atypical pattern detected" : "Normal brain pattern";
   const frames = result?.nFrames ?? 16;
   const hw = result?.hw ?? 64;
 
-  const handleRun = async (demo = false) => {
-    if (!demo && !file) {
+  const handleRun = async () => {
+    if (!file) {
       toast.error("Please upload a file first.");
       return;
     }
     const nm = file?.name.toLowerCase() ?? "";
     const needsAnalyzeSidecar =
       axis.id === "axis4-brain-aging" &&
-      !demo &&
       (nm.endsWith(".hdr") || nm.endsWith(".img")) &&
       !nm.endsWith(".zip");
     if (needsAnalyzeSidecar && !analyzePairFile) {
@@ -66,7 +61,7 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
       const r = await runAnalysis(
         {
           axisId: axis.id,
-          fileName: file?.name ?? "demo-input",
+          fileName: file!.name,
           patient: {
             id: meta.id || undefined,
             age: meta.age ? Number(meta.age) : undefined,
@@ -76,29 +71,27 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
           },
         },
         {
-          file: demo ? null : file,
-          demo,
-          analyzePairFile: demo ? null : analyzePairFile,
+          file,
+          analyzePairFile,
         },
       );
       setResult(r);
       setStage("done");
       toast.success("Analysis complete", { description: r.predictedClass });
-    } catch {
+    } catch (error) {
       setStage("idle");
-      toast.error("Analysis failed");
+      toast.error(error instanceof Error ? error.message : "Analysis failed");
     }
   };
 
   return (
-    <Layout
-      title={`Axis ${axis.number} · ${axis.title}`}
-      subtitle={axis.purpose}
-    >
+    <Layout title={`Axis ${axis.number} · ${axis.title}`} subtitle={axis.purpose}>
       {/* Hero */}
       <div className="rounded-2xl border bg-gradient-card p-6 lg:p-8 shadow-soft">
         <div className="flex items-start gap-5">
-          <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${axis.accent} grid place-items-center shadow-glow text-white`}>
+          <div
+            className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${axis.accent} grid place-items-center shadow-glow text-white`}
+          >
             <Icon className="h-7 w-7" />
           </div>
           <div className="min-w-0">
@@ -113,7 +106,9 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
             </p>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
               <span className="px-2 py-0.5 rounded-full bg-accent/60">{axis.acceptedFormats}</span>
-              <span className="px-2 py-0.5 rounded-full bg-accent/60 font-mono">{axis.endpoint}</span>
+              <span className="px-2 py-0.5 rounded-full bg-accent/60 font-mono">
+                {axis.endpoint}
+              </span>
             </div>
           </div>
         </div>
@@ -138,7 +133,8 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
                   Analyze 7.5 pair (optional)
                 </div>
                 <p className="text-[11px] text-muted-foreground mb-2 leading-relaxed">
-                  If your scan is two files (.hdr + .img): upload one above and the other here — order does not matter. Or zip both as{" "}
+                  If your scan is two files (.hdr + .img): upload one above and the other here —
+                  order does not matter. Or zip both as{" "}
                   <span className="font-mono">basename.hdr</span> +{" "}
                   <span className="font-mono">basename.img</span> and upload the .zip once.
                 </p>
@@ -159,7 +155,7 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
           <Card className="p-5">
             <div className="text-sm font-semibold mb-3">3. Run</div>
             <Button
-              onClick={() => handleRun(false)}
+              onClick={() => handleRun()}
               disabled={stage === "running"}
               className="w-full gap-2"
               size="lg"
@@ -168,30 +164,6 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
               Run analysis
               <ArrowRight className="h-4 w-4 ml-auto" />
             </Button>
-            {/* Demo / dev-only — uncomment for mock walkthrough + backend URL hint
-            <Button
-              variant="outline"
-              onClick={() => handleRun(true)}
-              disabled={stage === "running"}
-              className="w-full mt-2 gap-2"
-            >
-              <FlaskConical className="h-4 w-4" />
-              Try demo input
-            </Button>
-            <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-              {import.meta.env.VITE_API_BASE_URL ? (
-                <>
-                  Backend: <span className="font-mono">{String(import.meta.env.VITE_API_BASE_URL)}</span>
-                  <span className="font-mono ml-1">{axis.endpoint}</span>
-                </>
-              ) : (
-                <>
-                  Mock mode. Set <span className="font-mono">VITE_API_BASE_URL</span> for Django (
-                  <span className="font-mono">{axis.endpoint}</span>).
-                </>
-              )}
-            </p>
-            */}
           </Card>
         </div>
 
@@ -202,13 +174,15 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
               <Icon className="h-10 w-10 mx-auto text-bluegray" />
               <div className="mt-3 font-medium">No analysis yet</div>
               <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
-                Upload a {axis.input} file or use demo input to see prediction, confidence and explainability outputs.
+                Upload a {axis.input} file to see prediction, confidence and explainability outputs.
               </p>
             </Card>
           )}
 
           {stage === "running" && (
-            <AnalysisStatusCard stage={`${axis.input} preprocessing → model inference → explainability`} />
+            <AnalysisStatusCard
+              stage={`${axis.input} preprocessing → model inference → explainability`}
+            />
           )}
 
           {result && (
@@ -243,7 +217,9 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
                       </div>
                       <div className="mt-2 h-2 w-full rounded-full bg-muted overflow-hidden">
                         <div
-                          className={result?.isAnomaly ? "h-full bg-red-500" : "h-full bg-emerald-500"}
+                          className={
+                            result?.isAnomaly ? "h-full bg-red-500" : "h-full bg-emerald-500"
+                          }
                           style={{ width: `${anomalyPercent}%` }}
                         />
                       </div>
@@ -284,9 +260,12 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
               {result.regions && (
                 <Card className="p-5 space-y-4">
                   <div>
-                    <div className="text-sm font-semibold">Explainability — region contributions</div>
+                    <div className="text-sm font-semibold">
+                      Explainability — region contributions
+                    </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Heatmap overlay highlights regions most informative to the AI-detected pattern.
+                      Heatmap overlay highlights regions most informative to the AI-detected
+                      pattern.
                     </p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -317,26 +296,13 @@ export function AxisPageTemplate({ axis }: { axis: AxisDef }) {
                   <div>
                     <div className="text-sm font-semibold">Functional connectivity network</div>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Edge weight reflects estimated connectivity strength between resting-state networks.
+                      Edge weight reflects estimated connectivity strength between resting-state
+                      networks.
                     </p>
                   </div>
                   <NetworkGraph network={result.network} />
                 </Card>
               )}
-
-              {/* Medical-focused demo: synthetic signal chart hidden for axes that return placeholder waveforms
-              {result.signal && (
-                <Card className="p-5 space-y-4">
-                  <div>
-                    <div className="text-sm font-semibold">Signal explainability</div>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Highlighted windows correspond to detected instability segments.
-                    </p>
-                  </div>
-                  <SignalChart data={result.signal} markers={result.timeline} />
-                </Card>
-              )}
-              */}
 
               {axis.input === "Video" && result.timeline && (
                 <Card className="p-5 space-y-4">

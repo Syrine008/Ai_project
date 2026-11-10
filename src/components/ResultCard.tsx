@@ -1,5 +1,5 @@
 import { ShieldAlert } from "lucide-react";
-import type { AnalysisResult } from "@/lib/mockApi";
+import type { AnalysisResult } from "@/lib/api";
 // import { ConfidenceBars } from "./ConfidenceBars"; // hidden for medical-focused demo (restore if needed)
 
 export function ResultCard({ result }: { result: AnalysisResult }) {

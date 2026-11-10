@@ -9,39 +9,24 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as ReportsRouteImport } from './routes/reports'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as CasesRouteImport } from './routes/cases'
-import { Route as AxesRouteImport } from './routes/axes'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AxesRouteImport } from './routes/axes'
+import { Route as CasesRouteImport } from './routes/cases'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AxesIndexRouteImport } from './routes/axes.index'
-import { Route as AxesParkinsonAtypicalRouteImport } from './routes/axes.parkinson-atypical'
-import { Route as AxesNeuromotorVideoRouteImport } from './routes/axes.neuromotor-video'
-import { Route as AxesFunctionalConnectivityRouteImport } from './routes/axes.functional-connectivity'
-import { Route as AxesEpilepsyNetworkRouteImport } from './routes/axes.epilepsy-network'
-import { Route as AxesCerebellarDysfunctionRouteImport } from './routes/axes.cerebellar-dysfunction'
-import { Route as AxesBrainAgingRouteImport } from './routes/axes.brain-aging'
 import { Route as AxesAlzheimerDementiaRouteImport } from './routes/axes.alzheimer-dementia'
+import { Route as AxesBrainAgingRouteImport } from './routes/axes.brain-aging'
+import { Route as AxesCerebellarDysfunctionRouteImport } from './routes/axes.cerebellar-dysfunction'
+import { Route as AxesEpilepsyNetworkRouteImport } from './routes/axes.epilepsy-network'
+import { Route as AxesFunctionalConnectivityRouteImport } from './routes/axes.functional-connectivity'
+import { Route as AxesNeuromotorVideoRouteImport } from './routes/axes.neuromotor-video'
+import { Route as AxesParkinsonAtypicalRouteImport } from './routes/axes.parkinson-atypical'
 
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReportsRoute = ReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CasesRoute = CasesRouteImport.update({
-  id: '/cases',
-  path: '/cases',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AxesRoute = AxesRouteImport.update({
@@ -49,9 +34,24 @@ const AxesRoute = AxesRouteImport.update({
   path: '/axes',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const CasesRoute = CasesRouteImport.update({
+  id: '/cases',
+  path: '/cases',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AxesIndexRoute = AxesIndexRouteImport.update({
@@ -59,25 +59,14 @@ const AxesIndexRoute = AxesIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AxesRoute,
 } as any)
-const AxesParkinsonAtypicalRoute = AxesParkinsonAtypicalRouteImport.update({
-  id: '/parkinson-atypical',
-  path: '/parkinson-atypical',
+const AxesAlzheimerDementiaRoute = AxesAlzheimerDementiaRouteImport.update({
+  id: '/alzheimer-dementia',
+  path: '/alzheimer-dementia',
   getParentRoute: () => AxesRoute,
 } as any)
-const AxesNeuromotorVideoRoute = AxesNeuromotorVideoRouteImport.update({
-  id: '/neuromotor-video',
-  path: '/neuromotor-video',
-  getParentRoute: () => AxesRoute,
-} as any)
-const AxesFunctionalConnectivityRoute =
-  AxesFunctionalConnectivityRouteImport.update({
-    id: '/functional-connectivity',
-    path: '/functional-connectivity',
-    getParentRoute: () => AxesRoute,
-  } as any)
-const AxesEpilepsyNetworkRoute = AxesEpilepsyNetworkRouteImport.update({
-  id: '/epilepsy-network',
-  path: '/epilepsy-network',
+const AxesBrainAgingRoute = AxesBrainAgingRouteImport.update({
+  id: '/brain-aging',
+  path: '/brain-aging',
   getParentRoute: () => AxesRoute,
 } as any)
 const AxesCerebellarDysfunctionRoute =
@@ -86,14 +75,25 @@ const AxesCerebellarDysfunctionRoute =
     path: '/cerebellar-dysfunction',
     getParentRoute: () => AxesRoute,
   } as any)
-const AxesBrainAgingRoute = AxesBrainAgingRouteImport.update({
-  id: '/brain-aging',
-  path: '/brain-aging',
+const AxesEpilepsyNetworkRoute = AxesEpilepsyNetworkRouteImport.update({
+  id: '/epilepsy-network',
+  path: '/epilepsy-network',
   getParentRoute: () => AxesRoute,
 } as any)
-const AxesAlzheimerDementiaRoute = AxesAlzheimerDementiaRouteImport.update({
-  id: '/alzheimer-dementia',
-  path: '/alzheimer-dementia',
+const AxesFunctionalConnectivityRoute =
+  AxesFunctionalConnectivityRouteImport.update({
+    id: '/functional-connectivity',
+    path: '/functional-connectivity',
+    getParentRoute: () => AxesRoute,
+  } as any)
+const AxesNeuromotorVideoRoute = AxesNeuromotorVideoRouteImport.update({
+  id: '/neuromotor-video',
+  path: '/neuromotor-video',
+  getParentRoute: () => AxesRoute,
+} as any)
+const AxesParkinsonAtypicalRoute = AxesParkinsonAtypicalRouteImport.update({
+  id: '/parkinson-atypical',
+  path: '/parkinson-atypical',
   getParentRoute: () => AxesRoute,
 } as any)
 
@@ -206,32 +206,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reports': {
-      id: '/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof ReportsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cases': {
-      id: '/cases'
-      path: '/cases'
-      fullPath: '/cases'
-      preLoaderRoute: typeof CasesRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/axes': {
@@ -241,11 +220,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AxesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/cases': {
+      id: '/cases'
+      path: '/cases'
+      fullPath: '/cases'
+      preLoaderRoute: typeof CasesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/axes/': {
@@ -255,39 +255,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AxesIndexRouteImport
       parentRoute: typeof AxesRoute
     }
-    '/axes/parkinson-atypical': {
-      id: '/axes/parkinson-atypical'
-      path: '/parkinson-atypical'
-      fullPath: '/axes/parkinson-atypical'
-      preLoaderRoute: typeof AxesParkinsonAtypicalRouteImport
-      parentRoute: typeof AxesRoute
-    }
-    '/axes/neuromotor-video': {
-      id: '/axes/neuromotor-video'
-      path: '/neuromotor-video'
-      fullPath: '/axes/neuromotor-video'
-      preLoaderRoute: typeof AxesNeuromotorVideoRouteImport
-      parentRoute: typeof AxesRoute
-    }
-    '/axes/functional-connectivity': {
-      id: '/axes/functional-connectivity'
-      path: '/functional-connectivity'
-      fullPath: '/axes/functional-connectivity'
-      preLoaderRoute: typeof AxesFunctionalConnectivityRouteImport
-      parentRoute: typeof AxesRoute
-    }
-    '/axes/epilepsy-network': {
-      id: '/axes/epilepsy-network'
-      path: '/epilepsy-network'
-      fullPath: '/axes/epilepsy-network'
-      preLoaderRoute: typeof AxesEpilepsyNetworkRouteImport
-      parentRoute: typeof AxesRoute
-    }
-    '/axes/cerebellar-dysfunction': {
-      id: '/axes/cerebellar-dysfunction'
-      path: '/cerebellar-dysfunction'
-      fullPath: '/axes/cerebellar-dysfunction'
-      preLoaderRoute: typeof AxesCerebellarDysfunctionRouteImport
+    '/axes/alzheimer-dementia': {
+      id: '/axes/alzheimer-dementia'
+      path: '/alzheimer-dementia'
+      fullPath: '/axes/alzheimer-dementia'
+      preLoaderRoute: typeof AxesAlzheimerDementiaRouteImport
       parentRoute: typeof AxesRoute
     }
     '/axes/brain-aging': {
@@ -297,11 +269,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AxesBrainAgingRouteImport
       parentRoute: typeof AxesRoute
     }
-    '/axes/alzheimer-dementia': {
-      id: '/axes/alzheimer-dementia'
-      path: '/alzheimer-dementia'
-      fullPath: '/axes/alzheimer-dementia'
-      preLoaderRoute: typeof AxesAlzheimerDementiaRouteImport
+    '/axes/cerebellar-dysfunction': {
+      id: '/axes/cerebellar-dysfunction'
+      path: '/cerebellar-dysfunction'
+      fullPath: '/axes/cerebellar-dysfunction'
+      preLoaderRoute: typeof AxesCerebellarDysfunctionRouteImport
+      parentRoute: typeof AxesRoute
+    }
+    '/axes/epilepsy-network': {
+      id: '/axes/epilepsy-network'
+      path: '/epilepsy-network'
+      fullPath: '/axes/epilepsy-network'
+      preLoaderRoute: typeof AxesEpilepsyNetworkRouteImport
+      parentRoute: typeof AxesRoute
+    }
+    '/axes/functional-connectivity': {
+      id: '/axes/functional-connectivity'
+      path: '/functional-connectivity'
+      fullPath: '/axes/functional-connectivity'
+      preLoaderRoute: typeof AxesFunctionalConnectivityRouteImport
+      parentRoute: typeof AxesRoute
+    }
+    '/axes/neuromotor-video': {
+      id: '/axes/neuromotor-video'
+      path: '/neuromotor-video'
+      fullPath: '/axes/neuromotor-video'
+      preLoaderRoute: typeof AxesNeuromotorVideoRouteImport
+      parentRoute: typeof AxesRoute
+    }
+    '/axes/parkinson-atypical': {
+      id: '/axes/parkinson-atypical'
+      path: '/parkinson-atypical'
+      fullPath: '/axes/parkinson-atypical'
+      preLoaderRoute: typeof AxesParkinsonAtypicalRouteImport
       parentRoute: typeof AxesRoute
     }
   }

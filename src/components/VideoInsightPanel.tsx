@@ -1,6 +1,6 @@
 import { Play, Pause } from "lucide-react";
 import { useState } from "react";
-import type { TimelineMarker } from "@/lib/mockApi";
+import type { TimelineMarker } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const sevColor = (s: TimelineMarker["severity"]) =>

@@ -16,7 +16,7 @@ export function Layout({
       <Sidebar />
       <div className="flex-1 min-w-0 flex flex-col">
         <Topbar title={title} subtitle={subtitle} />
-        <main className="flex-1 p-6 lg:p-8 animate-fade-in">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 animate-fade-in">{children}</main>
       </div>
     </div>
   );

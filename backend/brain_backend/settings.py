@@ -11,9 +11,25 @@ try:
 except ImportError:
     pass
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-insecure-change-me")
-DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
-ALLOWED_HOSTS = ["*"]
+from django.core.exceptions import ImproperlyConfigured
+
+DEBUG = os.environ.get("DJANGO_DEBUG", "0") == "1"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-insecure-change-me" if DEBUG else "")
+ALLOWED_HOSTS = [host.strip() for host in os.environ.get(
+    "DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1]" if DEBUG else ""
+).split(",") if host.strip()]
+if not DEBUG and (len(SECRET_KEY) < 50 or SECRET_KEY.startswith("dev-") or not ALLOWED_HOSTS or "*" in ALLOWED_HOSTS):
+    raise ImproperlyConfigured("Production requires a strong DJANGO_SECRET_KEY and explicit DJANGO_ALLOWED_HOSTS.")
+SECURE_SSL_REDIRECT = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
+CSRF_TRUSTED_ORIGINS = [v.strip() for v in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",") if v.strip()]
+if os.environ.get("DJANGO_TRUST_PROXY", "0") == "1":
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CORS_ALLOW_CREDENTIALS = True
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -79,6 +95,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
@@ -91,6 +108,8 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get("DATA_UPLOAD_MAX_MEMORY_SIZE", 
 FILE_UPLOAD_MAX_MEMORY_SIZE = int(os.environ.get("FILE_UPLOAD_MAX_MEMORY_SIZE", "5242880"))
 
 REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework.authentication.SessionAuthentication"],
+    "DEFAULT_PERMISSION_CLASSES": ["common.permissions.WorkspaceAccess"],
     "DEFAULT_RENDERER_CLASSES": [
         "rest_framework.renderers.JSONRenderer",
     ],
@@ -103,9 +122,9 @@ REST_FRAMEWORK = {
 
 # CORS — open in dev, lock down in prod
 CORS_ALLOW_ALL_ORIGINS = DEBUG
-CORS_ALLOWED_ORIGINS = os.environ.get(
+CORS_ALLOWED_ORIGINS = [value.strip() for value in os.environ.get(
     "CORS_ALLOWED_ORIGINS", ""
-).split(",") if not DEBUG else []
+).split(",") if value.strip()]
 
 # Where the placeholder .pkl models live
 ML_MODELS_DIR = BASE_DIR  # each app keeps its model under <app>/ml/

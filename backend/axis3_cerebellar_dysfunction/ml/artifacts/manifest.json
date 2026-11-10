@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "stage1_architecture": "SessionFast3DCNN",
+  "stage2_architecture": "Strong3DCNN",
+  "stage1_labels": [
+    "Healthy",
+    "Anomaly"
+  ],
+  "stage2_labels": [
+    "Motor anomaly",
+    "Cognitive anomaly"
+  ],
+  "stage1_skull_strip": true,
+  "stage2_skull_strip": false,
+  "target_size": [
+    128,
+    128,
+    64
+  ],
+  "crop": [
+    [
+      20,
+      150
+    ],
+    [
+      20,
+      120
+    ],
+    [
+      0,
+      90
+    ]
+  ],
+  "normalization": "percentile_1_99_minmax_then_per_stage_zscore",
+  "source": "hassening/cerebellum-finall: saved session model_fast (history cell 43) + strong3dcnn_finetuned_best.pth",
+  "torch_version": "2.11.0+cpu",
+  "provenance": {
+    "stage1": "Earlier trained three-block Fast3DCNN recovered from state.db; not the later two-block grid-search model.",
+    "session_sha256": "734cc0eebd5a3e8966618112497c98f2890fa4bce5ad70a61170d162d275413c",
+    "stage2_sha256": "d5a0ebddd2e84d1cd9757b20cc024a95a4d26e01012e1449483a23e2fba357fb",
+    "stage1_saved_logits_max_abs_difference": 1.4901161193847656e-08,
+    "stage1_saved_logits_tolerance": 0.0001,
+    "template": "Voxel data and LPS geometry recovered from saved MNI_TEMPLATE; affine converted to NIfTI RAS.",
+    "stage2_validation": "Strict state-dict match to the submitted notebook Strong3DCNN architecture."
+  }
+}

@@ -1,4 +1,4 @@
-import type { ConfidenceItem } from "@/lib/mockApi";
+import type { ConfidenceItem } from "@/lib/api";
 
 export function ConfidenceBars({ items }: { items: ConfidenceItem[] }) {
   return (

@@ -1,4 +1,4 @@
-import type { AnalysisResult } from "@/lib/mockApi";
+import type { AnalysisResult } from "@/lib/api";
 
 /**
  * Lightweight network graph (no extra deps).

@@ -37,3 +37,14 @@ backend/.env
 *.njsproj
 *.sln
 *.sw?
+
+# Python runtime and private research inputs
+__pycache__/
+*.py[cod]
+.venv/
+*.sqlite3
+*.nii
+*.nii.gz
+*.npy
+!backend/axis3_cerebellar_dysfunction/ml/artifacts/mni_template.nii.gz
+backend/staticfiles/

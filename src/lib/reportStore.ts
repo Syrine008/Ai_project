@@ -1,5 +1,5 @@
 import type { AxisId } from "./axes";
-import type { AnalysisResult } from "./mockApi";
+import type { AnalysisResult } from "./api";
 
 export const REPORTS_STORAGE_KEY = "brain_axis_reports";
 
@@ -28,7 +28,8 @@ export interface SavedAnalysisReport {
   payload: AnalysisResult;
 }
 
-const canUseStorage = () => typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+const canUseStorage = () =>
+  typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 
 export function loadSavedReports(): SavedAnalysisReport[] {
   if (!canUseStorage()) {
@@ -75,7 +76,10 @@ export function deleteSavedReport(caseId: string): SavedAnalysisReport[] {
 
 export function downloadReportJson(report: SavedAnalysisReport) {
   const patient = sanitizeFilePart(report.patientId || "unknown");
-  downloadJson(report.payload, `${sanitizeFilePart(report.axisId)}_${sanitizeFilePart(report.caseId)}_${patient}.json`);
+  downloadJson(
+    report.payload,
+    `${sanitizeFilePart(report.axisId)}_${sanitizeFilePart(report.caseId)}_${patient}.json`,
+  );
 }
 
 export function downloadReportPdf(report: SavedAnalysisReport) {
@@ -147,6 +151,22 @@ function buildPrintableReportHtml(report: SavedAnalysisReport) {
         </tr>`,
     )
     .join("");
+  const cerebellum = payload.cerebellum;
+  const stageHtml = cerebellum
+    ? [cerebellum.stage1, cerebellum.stage2]
+        .map(
+          (stage, index) =>
+            `<h2>Stage ${index + 1}</h2>${stage ? `<p>${escapeHtml(stage.predictedClass)}</p><ul>${stage.confidence.map((item) => `<li>${escapeHtml(item.label)}: ${formatPercent(item.value)}</li>`).join("")}</ul>` : "<p>Not run: Stage 1 classified the scan as healthy.</p>"}`,
+        )
+        .join("")
+    : "";
+  const cerebellumImages = (cerebellum?.images || [])
+    .filter((image) => /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(image.dataUrl))
+    .map(
+      (image) =>
+        `<figure><img src="${escapeAttribute(image.dataUrl)}" alt="${escapeAttribute(image.title)}" /><figcaption>${escapeHtml(image.title)}</figcaption></figure>`,
+    )
+    .join("");
   const regionRows = (payload.regions || [])
     .map(
       (region) => `
@@ -188,15 +208,17 @@ function buildPrintableReportHtml(report: SavedAnalysisReport) {
       <strong>${escapeHtml(report.prediction)}</strong>
       <p>${escapeHtml(payload.summary || "")}</p>
     </div>
-    <h2>Confidence</h2>
+    ${stageHtml}
+    <h2>Model scores</h2>
     <table>
       <thead><tr><th>Label</th><th>Value</th></tr></thead>
       <tbody>${confidenceRows || `<tr><td colspan="2">Not available</td></tr>`}</tbody>
     </table>
-    <h2>Grad-CAM Explainability Preview</h2>
+    ${cerebellumImages}
+    <h2>Model attention</h2>
     <p>Heatmap highlights image regions that influenced the CNN prediction.</p>
     ${gradCamUrl ? `<img src="${escapeAttribute(gradCamUrl)}" alt="Grad-CAM heatmap preview" />` : `<p>Explainability output is not available for this case yet.</p>`}
-    <h2>Backend Region Output</h2>
+    <h2>Region contributions</h2>
     <table>
       <thead><tr><th>Region</th><th>Side</th><th>Contribution</th><th>Note</th></tr></thead>
       <tbody>${regionRows || `<tr><td colspan="4">Not available</td></tr>`}</tbody>
@@ -207,7 +229,9 @@ function buildPrintableReportHtml(report: SavedAnalysisReport) {
 }
 
 function formatPercent(value?: number | null) {
-  return typeof value === "number" && Number.isFinite(value) ? `${(value * 100).toFixed(1)}%` : "Not available";
+  return typeof value === "number" && Number.isFinite(value)
+    ? `${(value * 100).toFixed(1)}%`
+    : "Not available";
 }
 
 function formatDate(value: string) {
@@ -233,5 +257,11 @@ function isSavedReport(value: unknown): value is SavedAnalysisReport {
     return false;
   }
   const candidate = value as Partial<SavedAnalysisReport>;
-  return Boolean(candidate.caseId && candidate.axisId && candidate.axisTitle && candidate.prediction && candidate.payload);
+  return Boolean(
+    candidate.caseId &&
+    candidate.axisId &&
+    candidate.axisTitle &&
+    candidate.prediction &&
+    candidate.payload,
+  );
 }

@@ -1,4 +1,4 @@
-"""Response shape mirrors `AnalysisResult` in src/lib/mockApi.ts.
+"""Response shape mirrors `AnalysisResult` in src/lib/api.ts.
 
 We don't strictly serialize on the way out (the view returns a plain dict)
 but these serializers document and validate the contract.

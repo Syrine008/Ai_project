@@ -1,117 +1,91 @@
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { ArrowRight, FileText, Brain } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { AxisCard } from "@/components/AxisCard";
-import { RecentCasesTable } from "@/components/RecentCasesTable";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AXES } from "@/lib/axes";
-import { MOCK_CASES } from "@/lib/mockApi";
-import { ArrowRight, Activity, FileText, FlaskConical, Sparkles } from "lucide-react";
-
-const STATS = [
-  { label: "Cases analyzed", value: "1,284", hint: "+24 this week", icon: Activity },
-  { label: "Axes available", value: "7", hint: "Across 4 modalities", icon: Sparkles },
-  { label: "Reports generated", value: "962", hint: "+18 this week", icon: FileText },
-  { label: "Models in production", value: "7", hint: "All explainable", icon: FlaskConical },
-];
+import { loadSavedReports, type SavedAnalysisReport } from "@/lib/reportStore";
 
 export function DashboardPage() {
+  const [reports, setReports] = useState<SavedAnalysisReport[]>([]);
+  useEffect(() => {
+    setReports(loadSavedReports());
+  }, []);
   return (
-    <Layout title="Dashboard" subtitle="Decision-support workspace">
-      {/* Welcome */}
-      <div className="rounded-2xl border bg-gradient-hero text-white p-8 shadow-elegant relative overflow-hidden">
-        <div className="absolute -top-20 -right-10 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
-        <div className="relative max-w-2xl">
-          <div className="text-[11px] uppercase tracking-wider opacity-80">Welcome back</div>
-          <h2 className="mt-1 text-2xl md:text-3xl font-semibold tracking-tight text-balance">
-            Ready to surface hidden brain dynamics?
-          </h2>
-          <p className="mt-2 text-sm text-white/80 max-w-xl">
-            Pick an axis to start a new analysis or pick up where you left off in your case history.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            <Button asChild variant="secondary" className="gap-1.5">
-              <Link to="/axes">
-                Start new analysis <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button asChild variant="ghost" className="text-white hover:bg-white/15">
-              <Link to="/cases">View case history</Link>
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick stats */}
-      <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {STATS.map((s) => (
-          <Card key={s.label} className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                  {s.label}
-                </div>
-                <div className="mt-1.5 text-2xl font-semibold tabular-nums">{s.value}</div>
-                <div className="text-[11px] text-muted-foreground mt-0.5">{s.hint}</div>
-              </div>
-              <div className="h-9 w-9 rounded-lg bg-primary/10 grid place-items-center text-primary">
-                <s.icon className="h-4 w-4" />
-              </div>
-            </div>
+    <Layout
+      title="Clinical research workspace"
+      subtitle="Prepare an examination, review model findings, and save a report."
+    >
+      <section className="rounded-2xl border bg-gradient-hero text-white p-6 sm:p-10">
+        <Brain className="h-8 w-8 mb-4" />
+        <p className="text-xs uppercase tracking-widest text-white/80">Cerebellum MRI</p>
+        <h2 className="mt-2 text-2xl sm:text-3xl font-semibold">
+          A clear path from scan to review
+        </h2>
+        <p className="mt-3 max-w-2xl text-white/85">
+          Upload a 3D MRI, review the two-stage model output, and inspect the image regions that
+          influenced the result.
+        </p>
+        <Button asChild className="mt-6 bg-white text-slate-900 hover:bg-white/90">
+          <Link to="/axes/cerebellar-dysfunction">
+            Start MRI analysis <ArrowRight className="ml-2 h-4 w-4" />
+          </Link>
+        </Button>
+      </section>
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        {[
+          ["Saved reports", String(reports.length), "On this browser only"],
+          ["Analysis workflows", String(AXES.length), "Availability depends on installed models"],
+          ["Review required", "Research use", "Model outputs are not diagnoses"],
+        ].map(([title, value, hint]) => (
+          <Card key={title} className="p-5">
+            <p className="text-sm text-muted-foreground">{title}</p>
+            <p className="text-2xl font-semibold mt-2">{value}</p>
+            <p className="text-xs text-muted-foreground mt-2">{hint}</p>
           </Card>
         ))}
       </div>
-
-      {/* Axes */}
-      <section className="mt-10">
-        <div className="flex items-end justify-between mb-4">
-          <div>
-            <h3 className="text-lg font-semibold tracking-tight">7 Axes</h3>
-            <p className="text-sm text-muted-foreground">Pick an axis to upload data and run analysis.</p>
-          </div>
-          <Button asChild variant="ghost" size="sm" className="gap-1">
-            <Link to="/axes">View all <ArrowRight className="h-3.5 w-3.5" /></Link>
-          </Button>
-        </div>
+      <section className="mt-8">
+        <h2 className="text-lg font-semibold mb-4">Choose an analysis</h2>
         <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
-          {AXES.map((a) => (
-            <AxisCard key={a.id} axis={a} />
+          {AXES.map((axis) => (
+            <AxisCard key={axis.id} axis={axis} />
           ))}
         </div>
       </section>
-
-      {/* Recent cases + reports shortcut */}
-      <section className="mt-10 grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <div className="flex items-end justify-between mb-3">
-            <h3 className="text-lg font-semibold tracking-tight">Recent cases</h3>
-            <Button asChild variant="ghost" size="sm" className="gap-1">
-              <Link to="/cases">All cases <ArrowRight className="h-3.5 w-3.5" /></Link>
-            </Button>
-          </div>
-          <RecentCasesTable cases={MOCK_CASES.slice(0, 4)} />
+      <section className="mt-8">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold">Recent saved reports</h2>
+          <Link to="/reports" className="text-sm text-primary underline">
+            View reports
+          </Link>
         </div>
-
-        <Card className="p-6 bg-gradient-card flex flex-col">
-          <div className="text-sm font-semibold">Reports</div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Decision-support reports across all axes. Export, share or print.
-          </p>
-          <div className="mt-4 space-y-2 text-sm flex-1">
-            {MOCK_CASES.filter((c) => c.status === "completed")
-              .slice(0, 3)
-              .map((c) => (
-                <div key={c.id} className="flex items-center gap-2 rounded-lg border bg-card p-2.5">
-                  <FileText className="h-4 w-4 text-primary" />
-                  <span className="font-mono text-xs">{c.id}</span>
-                  <span className="text-muted-foreground text-xs ml-auto">{c.date}</span>
+        {reports.length === 0 ? (
+          <Card className="p-8 border-dashed text-center">
+            <FileText className="mx-auto h-8 w-8 text-muted-foreground" />
+            <p className="mt-3 font-medium">No saved reports yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Complete an analysis and choose Save report to keep it in this browser.
+            </p>
+          </Card>
+        ) : (
+          <div className="grid gap-3">
+            {reports.slice(0, 4).map((report) => (
+              <Card key={report.caseId} className="p-4 flex flex-wrap justify-between gap-3">
+                <div>
+                  <p className="font-medium">{report.axisTitle}</p>
+                  <p className="text-sm text-muted-foreground">{report.prediction}</p>
                 </div>
-              ))}
+                <div className="text-xs text-muted-foreground">
+                  <p>{report.caseId}</p>
+                  <p>{new Date(report.generatedAt).toLocaleDateString()}</p>
+                </div>
+              </Card>
+            ))}
           </div>
-          <Button asChild className="mt-4 w-full">
-            <Link to="/reports">Open reports</Link>
-          </Button>
-        </Card>
+        )}
       </section>
     </Layout>
   );

@@ -15,10 +15,11 @@ import {
 } from "@/lib/reportStore";
 import { toast } from "sonner";
 
-const pct = (value?: number) =>
+const pct = (value?: number | null) =>
   typeof value === "number" && Number.isFinite(value) ? `${Math.round(value * 100)}%` : "Not available";
 
 function reportMainProbability(report: SavedAnalysisReport) {
+  if (report.axisId === "axis3-cerebellar-dysfunction") return pct(report.payload.topConfidence ?? undefined);
   const prediction = report.prediction.toLowerCase();
   if (report.axisId === "axis2-parkinson-atypical") {
     if (prediction.includes("atypical")) {

@@ -8,7 +8,7 @@ import {
   Tooltip,
   ReferenceArea,
 } from "recharts";
-import type { SignalPoint, TimelineMarker } from "@/lib/mockApi";
+import type { SignalPoint, TimelineMarker } from "@/lib/api";
 
 export function SignalChart({
   data,

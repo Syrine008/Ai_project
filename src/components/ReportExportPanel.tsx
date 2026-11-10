@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Download, FileText, Mail, Printer, Share2 } from "lucide-react";
+import { Download, FileText, Mail, Printer, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { sendReportToPatient, type AnalysisResult } from "@/lib/mockApi";
+import { sendReportToPatient, type AnalysisResult } from "@/lib/api";
+import { saveAnalysisReport, downloadReportPdf } from "@/lib/reportStore";
 import type { AxisId } from "@/lib/axes";
 
 export function ReportExportPanel({
@@ -19,8 +20,7 @@ export function ReportExportPanel({
   patient?: { id?: string; age?: number; sex?: "M" | "F" | "Other" };
 }) {
   const [sending, setSending] = useState(false);
-  const showPatientEmail =
-    Boolean(patientEmail?.trim()) && Boolean(axisId) && Boolean(axisTitle);
+  const showPatientEmail = Boolean(patientEmail?.trim()) && Boolean(axisId) && Boolean(axisTitle);
 
   const handleSendPatientEmail = async () => {
     if (!axisId || !axisTitle || !patientEmail?.trim()) return;
@@ -30,7 +30,12 @@ export function ReportExportPanel({
         to: patientEmail.trim(),
         axisId,
         axisTitle,
-        patient,
+        patient: patient
+          ? {
+              ...patient,
+              sex: patient.sex === "M" || patient.sex === "F" ? patient.sex : undefined,
+            }
+          : undefined,
         result,
       });
       toast.success("Summary sent", {
@@ -76,7 +81,26 @@ export function ReportExportPanel({
         <Button onClick={handleDownload} className="gap-1.5">
           <Download className="h-4 w-4" /> Download report
         </Button>
-        <Button variant="outline" onClick={() => window.print()} className="gap-1.5">
+        <Button
+          variant="outline"
+          onClick={() => {
+            if (axisId && axisTitle) {
+              const opened = downloadReportPdf({
+                caseId: result.caseId,
+                axisId,
+                axisTitle,
+                patientId: patient?.id,
+                prediction: result.predictedClass,
+                generatedAt: result.generatedAt,
+                payload: result,
+              });
+              if (!opened) toast.error("Allow pop-up windows to print this report.");
+            } else {
+              window.print();
+            }
+          }}
+          className="gap-1.5"
+        >
           <Printer className="h-4 w-4" /> Print
         </Button>
         {showPatientEmail && (
@@ -90,13 +114,30 @@ export function ReportExportPanel({
             {sending ? "Sending…" : "Send analysis to patient"}
           </Button>
         )}
-        <Button
-          variant="ghost"
-          onClick={() => toast("Share link copied (demo)")}
-          className="gap-1.5"
-        >
-          <Share2 className="h-4 w-4" /> Share
-        </Button>
+        {axisId && axisTitle && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              try {
+                saveAnalysisReport({
+                  caseId: result.caseId,
+                  axisId,
+                  axisTitle,
+                  patientId: patient?.id,
+                  prediction: result.predictedClass,
+                  generatedAt: result.generatedAt,
+                  payload: result,
+                });
+                toast.success("Report saved in this browser");
+              } catch {
+                toast.error("Browser storage is full or unavailable. Download the report instead.");
+              }
+            }}
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save report
+          </Button>
+        )}
       </div>
     </div>
   );

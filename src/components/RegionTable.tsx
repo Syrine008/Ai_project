@@ -1,4 +1,4 @@
-import type { RegionContribution } from "@/lib/mockApi";
+import type { RegionContribution } from "@/lib/api";
 
 export function RegionTable({ regions }: { regions: RegionContribution[] }) {
   return (
