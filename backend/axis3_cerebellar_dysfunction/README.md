@@ -50,8 +50,7 @@ The source also contains indentation errors in several experimental cells, so th
 integration does not claim that the submitted notebook runs unchanged in a fresh kernel.
 
 1. In the **existing trained Kaggle notebook session**, run the entire contents of
-   `notebooks/export_cerebellum.py` as a final cell. The same cell is provided in
-   `notebooks/Cerebellum_Export.ipynb`. It reads `model_fast`, `model_ft`, and `MNI_PATH`.
+   `notebooks/export_cerebellum.py` as a final cell. It reads `model_fast`, `model_ft`, and `MNI_PATH`.
    It exports both checkpoints, the exact MNI template, a preprocessing/label manifest,
    and a synthetic prediction parity fixture. It never substitutes random weights.
    If that session no longer has trained objects, its training data and training run
